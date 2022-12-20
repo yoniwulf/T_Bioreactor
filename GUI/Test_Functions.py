@@ -1,4 +1,4 @@
-import GUI_Sandbox
+""" import GUI_Sandbox
 
 def setRpm():
 	print("rpm set button clicked, rpm is " + str(rpmScale.get()))
@@ -14,3 +14,5 @@ def stopPressed():
 
 def eStopPressed():
 	print("Emergency Stop Button pressed, shutting down all systems")
+	
+ """
