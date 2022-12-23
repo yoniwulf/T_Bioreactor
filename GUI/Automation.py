@@ -3,6 +3,14 @@ from tkinter import ttk
 
 import pandas as pd
 
+
+'''
+* need to implement out of range detection for input values 
+	(ex: rpm too high, mins > 60, angle not multiple of 15 degrees)
+
+
+'''
+
 # loop through every cell and check for NaN. send warning and stop from proceding
 class MixProfile:
 	def __init__(self, rpmIn, angleIn, hourIn, minIn, secIn):
