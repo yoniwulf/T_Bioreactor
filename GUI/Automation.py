@@ -19,6 +19,23 @@ class MixProfile:
 		self.hour = hourIn
 		self.min = minIn
 		self.sec = secIn
+		self.infoText = ""
+	
+	def printInfoTextReturn(self):
+		self.infoText = "RPM: " + str(self.rpm,) + "    Angle: " + str(self.angle) + f"\nTime:           {self.hour:02}:{self.min:02}:{self.sec:02}"
+		return self.infoText
+	
+	def printInfoTextLine(self):
+		self.infoText = "RPM: " + str(self.rpm,) + "    Angle: " + str(self.angle) + f"    Time: {self.hour:02}:{self.min:02}:{self.sec:02}"
+		return self.infoText
+
+"""
+	def printInfoText(self):
+		self.infoText = "RPM: " + str(self.rpm,) + "    Angle: " + str(self.angle) + f"\nTime:           {self.hour:02}:{self.min:02}:{self.sec:02}" + f"\nRemaining:  {self.hour:02}:{self.min:02}:{self.sec:02}" #change to actual time left
+		return self.infoText
+"""
+
+
 
 profileList = []
 
