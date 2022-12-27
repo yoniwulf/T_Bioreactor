@@ -1,6 +1,7 @@
 from tkinter import*
 from tkinter import ttk
 from tkinter import filedialog
+from tkdial import*
 from MixingProfileClass import *
 import pandas as pd
 
@@ -23,7 +24,7 @@ Ideas:
 
 # declare main window
 window = Tk()
-window.geometry("480x800")
+window.geometry("800x480")
 
 # declare notebook to allow different tabs
 notebook = ttk.Notebook(window)
@@ -31,9 +32,11 @@ notebook = ttk.Notebook(window)
 #declare manual and automatic control tabs, add to notebook and grid
 manControlTab = Frame(notebook)
 autoControlTab = Frame(notebook)
+testTab = Frame(notebook)
 notebook.add(manControlTab, text= "Manual Control")
 notebook.add(autoControlTab, text= "Automatic Control")
-notebook.grid(row= 0, column= 0)
+notebook.add(testTab, text= "test tab ")
+notebook.pack(expand= TRUE)
 
 #declare variables
 rpmVal = 0
@@ -41,6 +44,7 @@ angleVal = 0
 profileList = []
 curProfIndex = 0
 curProfText = StringVar()
+
 
 
 
@@ -138,72 +142,95 @@ def importPressed():
 
 #------RPM Control------#
 
-#RPM control section label
-rpmLabel = Label(manControlTab, text= "RPM", font= ('Arial', 30, 'bold'), width= 7)
-rpmLabel.grid(row= 0, column= 0)
+rpmFrame = Frame(manControlTab)
+rpmFrame.pack(side= LEFT, fill= 'y', padx= 30)
 
-#RPM scale
-rpmScale = Scale(manControlTab, 
-					from_= 200, 
-					to= 0,
-					length= 500,
-					width= 20,
-					orient= VERTICAL,
-					font= ('Arial', 16),
-					tickinterval = 20,
-					resolution= 10,
-					border= 5,
-					activebackground= 'red',
-					showvalue= 0)
-rpmScale.grid(row= 1, column= 0, rowspan= 3)
+#RPM control section label
+rpmLabel = Label(rpmFrame, text= "RPM", font= ('Arial', 30, 'bold'))
+rpmLabel.pack(pady= 5)
+
+#RPM dial
+rpmDial = Meter(rpmFrame, 
+					start= 0, 
+					end= 200, 
+					major_divisions= 20, 
+					minor_divisions= 5,
+					radius= 230,
+					border_width= 0,
+					start_angle= 205,
+					end_angle= -230,
+					text= " RPM"
+					)
+rpmDial.pack(pady= 10)
+
+#rpm entry box label
+rpmEntryLabel = Label(rpmFrame, text= "Set RPM:", font= ('Arial', 16))
+rpmEntryLabel.pack()
+
+#rpm entry box
+rpmEntry = Entry(rpmFrame, font= ('Arial', 20), width= 5)
+rpmEntry.pack()
 
 #RPM set button
-rpmSetButton = Button(manControlTab, 
+rpmSetButton = Button(rpmFrame, 
 						text= "SET", 
 						command= setRpm,
-						padx= 10,
-						pady= 10,
+						padx= 30,
+						pady= 5,
 						border= 5,
 						background= 'green')
-rpmSetButton.grid(row= 5, column= 0, pady= 5)
+rpmSetButton.pack(pady= 10)
 
 
 #------Angle Control------#
 
-#angle control section label
-angleLabel = Label(manControlTab, text= "ANGLE", font= ('Arial', 30, 'bold'), width= 7)
-angleLabel.grid(row= 0, column= 1)
+angleFrame = Frame(manControlTab)
+angleFrame.pack(side= LEFT, fill= 'y', padx= 20)
 
-#Angle scale
-angleScale = Scale(manControlTab, 
-					from_= 90, 
-					to= 0,
-					length= 500,
-					width= 20,
-					orient= VERTICAL,
-					font= ('Arial', 16),
-					tickinterval = 15,
-					resolution= 15,
-					border= 5,
-					activebackground= 'red',
-					showvalue= 0)
-angleScale.grid(row= 1, column= 1, rowspan= 3)
+#angle control section label
+angleLabel = Label(angleFrame, text= "ANGLE", font= ('Arial', 30, 'bold'), width= 7)
+angleLabel.pack(pady= 5)
+
+#RPM dial
+angleDial = Meter(angleFrame, 
+					start= 0, 
+					end= 90, 
+					major_divisions= 15, 
+					minor_divisions= 5,
+					radius= 230,
+					border_width= 0,
+					start_angle= 0,
+					end_angle= 90,
+					text= " Degrees"
+					)
+angleDial.pack(pady= 10)
+
+#angle entry box label
+angleEntryLabel = Label(angleFrame, text= "Set Angle:", font= ('Arial', 16))
+angleEntryLabel.pack()
+
+#angle entry box
+angleEntry = Entry(angleFrame, font= ('Arial', 20), width= 5)
+angleEntry.pack()
 
 #Angle set button
-angleSetButton = Button(manControlTab, 
+angleSetButton = Button(angleFrame, 
 						text= "SET", 
 						command= setAngle,
-						padx= 10,
-						pady= 10,
+						padx= 30,
+						pady= 5,
 						border= 5,
 						background= 'green')
-angleSetButton.grid(row= 5, column= 1, pady= 5)
+angleSetButton.pack(pady= 10)
 
 
 #------Start/Stop/E-Stop Control------#
 
+startStopFrame = Frame(manControlTab)
+startStopFrame.pack(side= LEFT, fill= 'y', padx= 30)
+
 #Start button
-startButton = Button(manControlTab, 
+startButton = Button(startStopFrame, 
 						width= 6,
 						height= 3,
 						background= 'green',
@@ -211,10 +238,10 @@ startButton = Button(manControlTab,
 						font= ('Arial', 20, 'bold'),
 						command= startPressed,
 						border= 5)
-startButton.grid(row= 1, column= 2, padx= 5)
+startButton.pack(pady= 10)
 
 #Stop button
-stopButton = Button(manControlTab, 
+stopButton = Button(startStopFrame, 
 						width= 6,
 						height= 3,
 						background= 'red',
@@ -222,10 +249,10 @@ stopButton = Button(manControlTab,
 						font= ('Arial', 20, 'bold'),
 						command= stopPressed,
 						border= 5)
-stopButton.grid(row= 2, column= 2, padx= 5)
+stopButton.pack(pady= 10)
 
 #E-stop button
-eStopButton = Button(manControlTab, 
+eStopButton = Button(startStopFrame, 
 						width= 6,
 						height= 3,
 						background= 'yellow',
@@ -233,7 +260,7 @@ eStopButton = Button(manControlTab,
 						font= ('Arial', 20, 'bold'),
 						command= eStopPressed,
 						border= 5)
-eStopButton.grid(row= 3, column= 2, padx= 5)
+eStopButton.pack(pady= 10)
 
 
 #----------------------------------#
@@ -356,6 +383,39 @@ window.mainloop()
 
 #----- OLD CODE -----#
 """
+
+#RPM scale
+rpmScale = Scale(manControlTab, 
+					from_= 200, 
+					to= 0,
+					length= 400,
+					width= 20,
+					orient= VERTICAL,
+					font= ('Arial', 16),
+					tickinterval = 20,
+					resolution= 10,
+					border= 5,
+					activebackground= 'red',
+					showvalue= 0)
+rpmScale.grid(row= 2, column= 0, rowspan= 3)
+
+#Angle scale
+angleScale = Scale(manControlTab, 
+					from_= 90, 
+					to= 0,
+					length= 400,
+					width= 20,
+					orient= VERTICAL,
+					font= ('Arial', 16),
+					tickinterval = 15,
+					resolution= 15,
+					border= 5,
+					activebackground= 'red',
+					showvalue= 0)
+angleScale.grid(row= 2, column= 1, rowspan= 3)
+
+
+
 curProfTextBox = Text(autoControlTab, height= 3, width= 50)
 curProfTextBox.insert(index= END, chars= "RPM = ... \nAngle = ... \n Time = ...")
 curProfTextBox.grid(row = 1, column= 0, rowspan= 3, columnspan= 6)
