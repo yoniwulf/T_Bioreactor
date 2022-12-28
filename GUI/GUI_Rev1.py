@@ -1,6 +1,7 @@
 from tkinter import*
 from tkinter import ttk
 from tkinter import filedialog
+from tkinter import messagebox
 from tkdial import*
 from MixingProfileClass import *
 import pandas as pd
@@ -44,6 +45,8 @@ angleVal = 0
 profileList = []
 curProfIndex = 0
 curProfText = StringVar()
+curProfText.set("RPM:           Angle:  \nTime:           00:00:00")
+
 
 
 
@@ -55,17 +58,27 @@ curProfText = StringVar()
 
 # function to update selected rpm value
 def setRpm():
-	global rpmVal 
-	rpmVal = rpmScale.get()
-	print("rpm set button clicked, scale rpm is " + str(rpmScale.get())
-			+ " rpmVal is " + str(rpmVal))
+	global rpmVal
+	
+	if (int(rpmEntry.get()) > 200) or (int(rpmEntry.get()) < 0):
+		messagebox.showwarning(title= "RPM out of range", message= "RPM must be between 0 and 200")
+
+	else:
+		rpmVal = rpmEntry.get()
+		print("rpm set button clicked, entry rpm is " + str(rpmEntry.get())
+				+ " rpmVal is " + str(rpmVal))
 
 # function to update selected angle value
 def setAngle():
 	global angleVal
-	angleVal = angleScale.get()
-	print("angle set button clicked, scale angle is " + str(angleScale.get())
-			+ " angleVal is " + str(angleVal))
+
+	if (int(angleEntry.get()) > 90) or (int(angleEntry.get()) < 0):
+		messagebox.showwarning(title= "Angle out of range", message= "Angle must be between 0 and 90")
+
+	else:
+		angleVal = angleEntry.get()
+		print("angle set button clicked, entry angle is " + str(angleEntry.get())
+				+ " angleVal is " + str(angleVal))
 
 # function to send rpmVal, angleVal, and start command (needed?) to arduino
 def startPressed():
@@ -83,11 +96,6 @@ def stopPressed():
 def eStopPressed():
 	print("Emergency Stop Button pressed, shutting down all systems")
 
-"""
-def importProfiles(lBox, profList):
-	for j in range(len(profList)):
-		lBox.insert(j, profList[j].printInfoTextLine())
-"""
 
 # function to import data from excel sheet
 def importPressed():
@@ -226,11 +234,11 @@ angleSetButton.pack(pady= 10)
 
 #------Start/Stop/E-Stop Control------#
 
-startStopFrame = Frame(manControlTab)
-startStopFrame.pack(side= LEFT, fill= 'y', padx= 30)
+manStartStopFrame = Frame(manControlTab)
+manStartStopFrame.pack(side= LEFT, fill= 'y', padx= 30)
 
 #Start button
-startButton = Button(startStopFrame, 
+manStartButton = Button(manStartStopFrame, 
 						width= 6,
 						height= 3,
 						background= 'green',
@@ -238,10 +246,10 @@ startButton = Button(startStopFrame,
 						font= ('Arial', 20, 'bold'),
 						command= startPressed,
 						border= 5)
-startButton.pack(pady= 10)
+manStartButton.pack(pady= 10)
 
 #Stop button
-stopButton = Button(startStopFrame, 
+manStopButton = Button(manStartStopFrame, 
 						width= 6,
 						height= 3,
 						background= 'red',
@@ -249,10 +257,10 @@ stopButton = Button(startStopFrame,
 						font= ('Arial', 20, 'bold'),
 						command= stopPressed,
 						border= 5)
-stopButton.pack(pady= 10)
+manStopButton.pack(pady= 10)
 
 #E-stop button
-eStopButton = Button(startStopFrame, 
+manEStopButton = Button(manStartStopFrame, 
 						width= 6,
 						height= 3,
 						background= 'yellow',
@@ -260,77 +268,80 @@ eStopButton = Button(startStopFrame,
 						font= ('Arial', 20, 'bold'),
 						command= eStopPressed,
 						border= 5)
-eStopButton.pack(pady= 10)
+manEStopButton.pack(pady= 10)
 
 
 #----------------------------------#
 #------Automation Control Tab------#
 #----------------------------------#
 
-"""
-#test vars:
-curProfRpm = str(200)
-curProfAngle = str(45)
-curProfTime = "01:05:00"
-curProfTimeRem = "00:32:25"
-"""
-
 #------Current Profile display------#
 
-#current profile Label, add to grid
-curProfLabel = Label(autoControlTab, text= "Current Profile", font= ('Arial', 30, 'bold'))
-curProfLabel.grid(row= 0, column= 0, columnspan= 2, padx= 15)
+#profiles frame
+autoProfFrame = Frame(autoControlTab)
+autoProfFrame.pack(side= LEFT, fill= 'y', padx= 30)
 
-#create frame for current profile, add to grid
-curProfFrame = Frame(autoControlTab, width= 1000)
-curProfFrame.grid(row = 1, column= 0, columnspan= 2)
+#current profile Label, add to grid
+curProfLabel = Label(autoProfFrame, text= "Current Profile", font= ('Arial', 30, 'bold'))
+curProfLabel.pack()
 
 #create message for current profile, pack into curProfFrame
-curProfMes = Message(curProfFrame, 
+curProfMes = Message(autoProfFrame, 
 							textvariable= curProfText,
 							justify= 'left',
 							font= ('Arial', 16),
 							width= 500)
 curProfMes.pack()
 
+#create frame for current profile, add to grid
+prevNextFrame = Frame(autoProfFrame)
+prevNextFrame.pack()
+
 #create previous profile button
-prevProfButton = Button(autoControlTab, text= "PREV", width= 15)
-prevProfButton.grid(row= 2, column= 0)
+prevProfButton = Button(prevNextFrame, text= "PREV", width= 15)
+prevProfButton.pack(side= LEFT, padx= 12, pady= 5)
 
 #create next profile button
-nextProfButton = Button(autoControlTab, text= "NEXT", width= 15)
-nextProfButton.grid(row= 2, column= 1)
+nextProfButton = Button(prevNextFrame, text= "NEXT", width= 15)
+nextProfButton.pack(side= RIGHT, padx= 12)
 
 #create restart profile button
-restartProfButton = Button(autoControlTab, text= "RESTART", width= 37)
-restartProfButton.grid(row= 3, column= 0, columnspan= 2, pady= 5)
+restartProfButton = Button(autoProfFrame, text= "RESTART", width= 35)
+restartProfButton.pack()
 
 #------All Profiles display------#
 
 #all profiles Label
-allProfLabel = Label(autoControlTab, text= "All Profiles", font= ('Arial', 30, 'bold'))
-allProfLabel.grid(row= 5, column= 0, columnspan= 2)
+allProfLabel = Label(autoProfFrame, text= "All Profiles", font= ('Arial', 30, 'bold'))
+allProfLabel.pack(pady= 10)
 
 #all profiles list box
-allProfListBox = Listbox(autoControlTab, height= 10, width= 45)
-allProfListBox.grid(row = 6, column= 0, rowspan= 3, columnspan= 2)
+allProfListBox = Listbox(autoProfFrame, height= 8, width= 32, font= ('Arial', 11))
+allProfListBox.pack()
+
+#import and clear all frame
+importClearFrame = Frame(autoProfFrame)
+importClearFrame.pack(pady= 10)
 
 #import profiles button
-importProfButton = Button(autoControlTab, 
+importProfButton = Button(importClearFrame, 
 							text= "Import", 
 							width= 15, 
 							command= importPressed)
-importProfButton.grid(row= 9, column= 0)
+importProfButton.pack(side= LEFT, padx= 12)
 
 #clear profiles button
-clearProfButton = Button(autoControlTab, text= "Clear All", width= 15)
-clearProfButton.grid(row= 9, column= 1)
+clearProfButton = Button(importClearFrame, text= "Clear All", width= 15)
+clearProfButton.pack(side= RIGHT, padx= 12)
 
 
 #------Start/Stop/E-Stop Control------#
 
-# define start button to call startPressed function
-autoStartButton = Button(autoControlTab, 
+autoStartStopFrame = Frame(testTab)
+autoStartStopFrame.pack(side= RIGHT, fill= 'y', padx= 30)
+
+#Start button
+autoStartButton = Button(autoStartStopFrame, 
 						width= 6,
 						height= 3,
 						background= 'green',
@@ -338,12 +349,10 @@ autoStartButton = Button(autoControlTab,
 						font= ('Arial', 20, 'bold'),
 						#command= startPressed, # change to new func
 						border= 5)
+autoStartButton.pack(pady= 10)
 
-# add start button to grid
-autoStartButton.grid(row= 1, column= 2, rowspan= 2, padx= 15)
-
-# define stop button to call stopPressed function
-autoStopButton = Button(autoControlTab, 
+#Stop button
+autoStopButton = Button(autoStartStopFrame, 
 						width= 6,
 						height= 3,
 						background= 'red',
@@ -351,12 +360,10 @@ autoStopButton = Button(autoControlTab,
 						font= ('Arial', 20, 'bold'),
 						#command= stopPressed, # change to new func
 						border= 5)
+autoStopButton.pack(pady= 10)
 
-# add stop button to grid
-autoStopButton.grid(row= 5, column= 2, rowspan= 2)
-
-# define e-stop button to call eStopPressed function
-autoEStopButton = Button(autoControlTab, 
+#E-stop button
+autoEStopButton = Button(autoStartStopFrame, 
 						width= 6,
 						height= 3,
 						background= 'yellow',
@@ -364,13 +371,7 @@ autoEStopButton = Button(autoControlTab,
 						font= ('Arial', 20, 'bold'),
 						#command= eStopPressed, # change to new func
 						border= 5)
-
-# add e-stop button to grid
-autoEStopButton.grid(row= 8, column= 2, rowspan= 2)
-
-
-
-
+autoEStopButton.pack(pady= 10)
 
 
 #---------------------#
