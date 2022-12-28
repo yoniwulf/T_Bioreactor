@@ -337,7 +337,7 @@ clearProfButton.pack(side= RIGHT, padx= 12)
 
 #------Start/Stop/E-Stop Control------#
 
-autoStartStopFrame = Frame(testTab)
+autoStartStopFrame = Frame(autoControlTab)
 autoStartStopFrame.pack(side= RIGHT, fill= 'y', padx= 30)
 
 #Start button
