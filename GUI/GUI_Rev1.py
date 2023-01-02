@@ -46,8 +46,11 @@ profileList = []
 curProfIndex = 0
 curProfText = StringVar()
 curProfText.set("RPM:           Angle:  \nTime:           00:00:00")
-
-
+rpmEntryText = StringVar()
+rpmEntryText.set("0")
+angleEntryText = StringVar()
+angleEntryText.set("0")
+rpmDialVal = 2
 
 
 
@@ -96,7 +99,6 @@ def stopPressed():
 def eStopPressed():
 	print("Emergency Stop Button pressed, shutting down all systems")
 
-
 # function to import data from excel sheet
 def importPressed():
 	#insure access to variables 
@@ -143,6 +145,25 @@ def importPressed():
 		#set current provile to profile at curProfIndex
 		curProfText.set(profileList[curProfIndex].printInfoTextReturn())
 
+# function to increment value displayed in rpm entry box
+def incRpmEntry():
+	if int(rpmEntryText.get()) < 200:
+		rpmEntryText.set(str(int(rpmEntry.get()) + 10))
+
+# function to decrement value displayed in rpm entry box
+def decRpmEntry():
+	if int(rpmEntryText.get()) > 0:
+		rpmEntryText.set(str(int(rpmEntry.get()) - 10))
+
+# function to increment value displayed in rpm entry box
+def incAngleEntry():
+	if int(angleEntryText.get()) < 90:
+		angleEntryText.set(str(int(angleEntry.get()) + 15))
+
+# function to decrement value displayed in rpm entry box
+def decAngleEntry():
+	if int(angleEntryText.get()) > 0:
+		angleEntryText.set(str(int(angleEntry.get()) - 15))
 
 #------------------------------#
 #------Manual Control Tab------#
@@ -167,17 +188,37 @@ rpmDial = Meter(rpmFrame,
 					border_width= 0,
 					start_angle= 205,
 					end_angle= -230,
-					text= " RPM"
-					)
+					text= " RPM")
 rpmDial.pack(pady= 10)
+rpmDial.set(rpmDialVal)
 
 #rpm entry box label
 rpmEntryLabel = Label(rpmFrame, text= "Set RPM:", font= ('Arial', 16))
 rpmEntryLabel.pack()
 
+#rpm entry frame
+rpmEntryFrame = Frame(rpmFrame)
+rpmEntryFrame.pack()
+
+#rpm -10 button
+rpmDecButton = Button(rpmEntryFrame, 
+						text= "-10",
+						command= decRpmEntry,
+						padx= 5,
+						pady= 5)
+rpmDecButton.pack(side= LEFT, padx= 5)
+
 #rpm entry box
-rpmEntry = Entry(rpmFrame, font= ('Arial', 20), width= 5)
-rpmEntry.pack()
+rpmEntry = Entry(rpmEntryFrame, font= ('Arial', 20), width= 5, textvariable= rpmEntryText)
+rpmEntry.pack(side= LEFT)
+
+#rpm +10 button
+rpmIncButton = Button(rpmEntryFrame, 
+						text= "+10",
+						command= incRpmEntry,
+						padx= 5,
+						pady= 5)
+rpmIncButton.pack(side= LEFT, padx= 5)
 
 #RPM set button
 rpmSetButton = Button(rpmFrame, 
@@ -199,7 +240,7 @@ angleFrame.pack(side= LEFT, fill= 'y', padx= 20)
 angleLabel = Label(angleFrame, text= "ANGLE", font= ('Arial', 30, 'bold'), width= 7)
 angleLabel.pack(pady= 5)
 
-#RPM dial
+#angle dial
 angleDial = Meter(angleFrame, 
 					start= 0, 
 					end= 90, 
@@ -217,9 +258,30 @@ angleDial.pack(pady= 10)
 angleEntryLabel = Label(angleFrame, text= "Set Angle:", font= ('Arial', 16))
 angleEntryLabel.pack()
 
-#angle entry box
-angleEntry = Entry(angleFrame, font= ('Arial', 20), width= 5)
-angleEntry.pack()
+#angle entry frame
+angleEntryFrame = Frame(angleFrame)
+angleEntryFrame.pack()
+
+#rpm -10 button
+angleDecButton = Button(angleEntryFrame, 
+						text= "-15",
+						command= decAngleEntry,
+						padx= 5,
+						pady= 5)
+angleDecButton.pack(side= LEFT, padx= 5)
+
+#rpm entry box
+angleEntry = Entry(angleEntryFrame, font= ('Arial', 20), width= 5, textvariable= angleEntryText)
+angleEntry.pack(side= LEFT)
+
+#rpm +10 button
+angleIncButton = Button(angleEntryFrame, 
+						text= "+15",
+						command= incAngleEntry,
+						padx= 5,
+						pady= 5)
+angleIncButton.pack(side= LEFT, padx= 5)
+
 
 #Angle set button
 angleSetButton = Button(angleFrame, 
