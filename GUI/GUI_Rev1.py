@@ -14,6 +14,11 @@ Ideas:
 * change set buttons to different color when user has changed value
 	* user must click set to update value
 * change start button to "update" when new values for rpm or angle are set
+
+
+
+non int entries
+cancel import
  """
 
 
@@ -33,24 +38,29 @@ notebook = ttk.Notebook(window)
 #declare manual and automatic control tabs, add to notebook and grid
 manControlTab = Frame(notebook)
 autoControlTab = Frame(notebook)
-testTab = Frame(notebook)
+#testTab = Frame(notebook)
 notebook.add(manControlTab, text= "Manual Control")
 notebook.add(autoControlTab, text= "Automatic Control")
-notebook.add(testTab, text= "test tab ")
+#notebook.add(testTab, text= "test tab ")
 notebook.pack(expand= TRUE)
 
 #declare variables
-rpmVal = 0
-angleVal = 0
-profileList = []
-curProfIndex = 0
-curProfText = StringVar()
+rpmVal = 0 #set rpm value
+angleVal = 0 #set angle value
+profileList = [] #list for mixing profiles
+curProfIndex = 0 #index of current mixing profile
+curProfText = StringVar() #stringVar for current profile
+rpmEntryText = StringVar() #stringVar for rpm displayed in rpmEntry widget
+angleEntryText = StringVar() #stringVar for angle displayed in angleEntry widget
+timeRemainingText = StringVar() #stringVar for text displayed in current profile message 2
+rpmDialVal = 50 #actual rpm value (can be set for testing)
+angleDialVal = 15 #actual angle value (can be set for testing)
+
+#set StringVars
 curProfText.set("RPM:           Angle:  \nTime:           00:00:00")
-rpmEntryText = StringVar()
 rpmEntryText.set("0")
-angleEntryText = StringVar()
 angleEntryText.set("0")
-rpmDialVal = 2
+timeRemainingText.set("Remaining:  00:00:00")
 
 
 
@@ -62,6 +72,7 @@ rpmDialVal = 2
 # function to update selected rpm value
 def setRpm():
 	global rpmVal
+	global rpmDialVal
 	
 	if (int(rpmEntry.get()) > 200) or (int(rpmEntry.get()) < 0):
 		messagebox.showwarning(title= "RPM out of range", message= "RPM must be between 0 and 200")
@@ -70,6 +81,8 @@ def setRpm():
 		rpmVal = rpmEntry.get()
 		print("rpm set button clicked, entry rpm is " + str(rpmEntry.get())
 				+ " rpmVal is " + str(rpmVal))
+		
+		#rpmDial.set(int(rpmVal)) #for testing
 
 # function to update selected angle value
 def setAngle():
@@ -82,6 +95,8 @@ def setAngle():
 		angleVal = angleEntry.get()
 		print("angle set button clicked, entry angle is " + str(angleEntry.get())
 				+ " angleVal is " + str(angleVal))
+
+		angleDial.set(int(angleVal))
 
 # function to send rpmVal, angleVal, and start command (needed?) to arduino
 def startPressed():
@@ -165,6 +180,8 @@ def decAngleEntry():
 	if int(angleEntryText.get()) > 0:
 		angleEntryText.set(str(int(angleEntry.get()) - 15))
 
+
+
 #------------------------------#
 #------Manual Control Tab------#
 #------------------------------#
@@ -209,7 +226,11 @@ rpmDecButton = Button(rpmEntryFrame,
 rpmDecButton.pack(side= LEFT, padx= 5)
 
 #rpm entry box
-rpmEntry = Entry(rpmEntryFrame, font= ('Arial', 20), width= 5, textvariable= rpmEntryText)
+rpmEntry = Entry(rpmEntryFrame, 
+					font= ('Arial', 20), 
+					width= 5, 
+					textvariable= rpmEntryText,
+					justify= CENTER)
 rpmEntry.pack(side= LEFT)
 
 #rpm +10 button
@@ -253,6 +274,7 @@ angleDial = Meter(angleFrame,
 					text= " Degrees"
 					)
 angleDial.pack(pady= 10)
+angleDial.set(angleDialVal)
 
 #angle entry box label
 angleEntryLabel = Label(angleFrame, text= "Set Angle:", font= ('Arial', 16))
@@ -271,7 +293,11 @@ angleDecButton = Button(angleEntryFrame,
 angleDecButton.pack(side= LEFT, padx= 5)
 
 #rpm entry box
-angleEntry = Entry(angleEntryFrame, font= ('Arial', 20), width= 5, textvariable= angleEntryText)
+angleEntry = Entry(angleEntryFrame, 
+					font= ('Arial', 20), 
+					width= 5, 
+					textvariable= angleEntryText,
+					justify= CENTER)
 angleEntry.pack(side= LEFT)
 
 #rpm +10 button
@@ -341,9 +367,9 @@ manEStopButton.pack(pady= 10)
 
 #profiles frame
 autoProfFrame = Frame(autoControlTab)
-autoProfFrame.pack(side= LEFT, fill= 'y', padx= 30)
+autoProfFrame.pack(side= LEFT, fill= 'y', padx= 30, expand= True)
 
-#current profile Label, add to grid
+#current profile Label
 curProfLabel = Label(autoProfFrame, text= "Current Profile", font= ('Arial', 30, 'bold'))
 curProfLabel.pack()
 
@@ -355,21 +381,31 @@ curProfMes = Message(autoProfFrame,
 							width= 500)
 curProfMes.pack()
 
-#create frame for current profile, add to grid
-prevNextFrame = Frame(autoProfFrame)
-prevNextFrame.pack()
+#create message for remaining time
+curProfMes = Message(autoProfFrame, 
+							textvariable= timeRemainingText,
+							justify= 'left',
+							font= ('Arial', 16),
+							width= 500)
+curProfMes.pack()
+
+#create frame for profile options
+profOptFrame = Frame(autoProfFrame)
+profOptFrame.pack()
 
 #create previous profile button
-prevProfButton = Button(prevNextFrame, text= "PREV", width= 15)
+prevProfButton = Button(profOptFrame, text= "PREV", width= 6)
 prevProfButton.pack(side= LEFT, padx= 12, pady= 5)
 
-#create next profile button
-nextProfButton = Button(prevNextFrame, text= "NEXT", width= 15)
-nextProfButton.pack(side= RIGHT, padx= 12)
-
 #create restart profile button
-restartProfButton = Button(autoProfFrame, text= "RESTART", width= 35)
-restartProfButton.pack()
+restartProfButton = Button(profOptFrame, text= "RESTART", width= 10)
+restartProfButton.pack(side= LEFT)
+
+#create next profile button
+nextProfButton = Button(profOptFrame, text= "NEXT", width= 6)
+nextProfButton.pack(side= LEFT, padx= 12)
+
+
 
 #------All Profiles display------#
 
