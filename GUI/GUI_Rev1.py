@@ -16,8 +16,6 @@ Ideas:
 * change start button to "update" when new values for rpm or angle are set
 
 
-
-non int entries
 cancel import
  """
 
@@ -73,30 +71,56 @@ timeRemainingText.set("Remaining:  00:00:00")
 def setRpm():
 	global rpmVal
 	global rpmDialVal
-	
-	if (int(rpmEntry.get()) > 200) or (int(rpmEntry.get()) < 0):
-		messagebox.showwarning(title= "RPM out of range", message= "RPM must be between 0 and 200")
+	global rpmEntryText
 
-	else:
-		rpmVal = rpmEntry.get()
-		print("rpm set button clicked, entry rpm is " + str(rpmEntry.get())
-				+ " rpmVal is " + str(rpmVal))
-		
-		#rpmDial.set(int(rpmVal)) #for testing
+	#try block to validate entry value
+	try:
+		setInt = int(rpmEntry.get())
+
+		if (setInt > 200) or (setInt < 0):
+			messagebox.showwarning(title= "RPM out of range", message= "RPM must be between 0 and 200")
+
+		if setInt % 10 != 0:
+			messagebox.showwarning(title= "RPM increment error", message= "RPM must be in increments of 10")
+
+		else:
+			rpmVal = setInt
+			print("rpm set button clicked, entry rpm is " + str(setInt)
+					+ " rpmVal is " + str(rpmVal))
+			
+			rpmDial.set(setInt) #for testing
+	
+	#if a decimal or non integer value is entered
+	except ValueError:
+		messagebox.showwarning(title= "Non-whole number RPM", message= "RPM must be a whole number")
+		rpmEntryText.set('0')
 
 # function to update selected angle value
 def setAngle():
 	global angleVal
+	global angleEntryText
+	
+	#try block to validate entry value
+	try:
+		setInt = int(angleEntry.get())
 
-	if (int(angleEntry.get()) > 90) or (int(angleEntry.get()) < 0):
-		messagebox.showwarning(title= "Angle out of range", message= "Angle must be between 0 and 90")
+		if (setInt > 90) or (setInt < 0):
+			messagebox.showwarning(title= "Angle out of range", message= "Angle must be between 0 and 90")
+		
+		if setInt % 15 != 0:
+			messagebox.showwarning(title= "Angle increment error", message= "Angle must be in increments of 15")
 
-	else:
-		angleVal = angleEntry.get()
-		print("angle set button clicked, entry angle is " + str(angleEntry.get())
-				+ " angleVal is " + str(angleVal))
+		else:
+			angleVal = setInt
+			print("angle set button clicked, entry angle is " + str(setInt)
+					+ " angleVal is " + str(angleVal))
 
-		angleDial.set(int(angleVal))
+			angleDial.set(setInt) #for testing
+	
+	#if a decimal or non integer value is entered
+	except ValueError:
+		messagebox.showwarning(title= "Non-whole number Angle", message= "Angle must be a whole number")
+		angleEntryText.set('0')
 
 # function to send rpmVal, angleVal, and start command (needed?) to arduino
 def startPressed():
@@ -162,22 +186,34 @@ def importPressed():
 
 # function to increment value displayed in rpm entry box
 def incRpmEntry():
-	if int(rpmEntryText.get()) < 200:
+	if (int(rpmEntryText.get()) + 10) > 200:
+		rpmEntryText.set('200')
+		
+	else:
 		rpmEntryText.set(str(int(rpmEntry.get()) + 10))
 
 # function to decrement value displayed in rpm entry box
 def decRpmEntry():
-	if int(rpmEntryText.get()) > 0:
+	if (int(rpmEntryText.get()) - 10) < 0:
+		rpmEntryText.set('0')
+	
+	else:
 		rpmEntryText.set(str(int(rpmEntry.get()) - 10))
 
 # function to increment value displayed in rpm entry box
 def incAngleEntry():
-	if int(angleEntryText.get()) < 90:
+	if (int(angleEntryText.get()) + 15) > 90:
+		angleEntryText.set('90')
+	
+	else:
 		angleEntryText.set(str(int(angleEntry.get()) + 15))
 
 # function to decrement value displayed in rpm entry box
 def decAngleEntry():
-	if int(angleEntryText.get()) > 0:
+	if (int(angleEntryText.get()) - 15) < 0:
+		angleEntryText.set('0')
+	
+	else:
 		angleEntryText.set(str(int(angleEntry.get()) - 15))
 
 
