@@ -1,0 +1,4 @@
+1/15/23:
+* added check for rpm and angle entry boxes to ensure floats cant be entered
+* modified check for rpm and angle entry out of range
+* added warning for rpm not in increments of 10 and angle not in increments of 15
