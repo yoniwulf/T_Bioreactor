@@ -1,3 +1,9 @@
+1/17/23:
+* added functionality to prev and next profile buttons
+* added custom foldable sections to make code easier to read
+	- must have #region folding for VS Code extention
+
+
 1/15/23:
 * added check for rpm and angle entry boxes to ensure floats cant be entered
 * modified check for rpm and angle entry out of range

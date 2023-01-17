@@ -4,9 +4,10 @@ from tkinter import filedialog
 from tkinter import messagebox
 from tkdial import*
 from MixingProfileClass import *
+#import Functions
 import pandas as pd
 
-#------Notes/Ideas------#
+# region Notes/Ideas
 """ 
 Ideas:
 * set buttons change variables (global?) of rpm and angle
@@ -18,10 +19,10 @@ Ideas:
 
 cancel import
  """
+# endregion
 
 
-
-
+# region Setup
 #----------------------------#
 #------Setup GUI Window------#
 #----------------------------#
@@ -39,7 +40,7 @@ autoControlTab = Frame(notebook)
 #testTab = Frame(notebook)
 notebook.add(manControlTab, text= "Manual Control")
 notebook.add(autoControlTab, text= "Automatic Control")
-#notebook.add(testTab, text= "test tab ")
+#notebook.add(testTab, text= "test tab")
 notebook.pack(expand= TRUE)
 
 #declare variables
@@ -47,6 +48,7 @@ rpmVal = 0 #set rpm value
 angleVal = 0 #set angle value
 profileList = [] #list for mixing profiles
 curProfIndex = 0 #index of current mixing profile
+numProfs = 0 #number of profiles
 curProfText = StringVar() #stringVar for current profile
 rpmEntryText = StringVar() #stringVar for rpm displayed in rpmEntry widget
 angleEntryText = StringVar() #stringVar for angle displayed in angleEntry widget
@@ -59,13 +61,14 @@ curProfText.set("RPM:           Angle:  \nTime:           00:00:00")
 rpmEntryText.set("0")
 angleEntryText.set("0")
 timeRemainingText.set("Remaining:  00:00:00")
+# endregion
 
 
+# region Functions
 
 #---------------------#
 #------Functions------#
 #---------------------#
-
 
 # function to update selected rpm value
 def setRpm():
@@ -144,6 +147,7 @@ def importPressed():
 	global profileList
 	global curProfText
 	global allProfListBox
+	global numProfs
 	
 	#open file dialog box, set filePath to string path of selected file
 	filePath = filedialog.askopenfilename()
@@ -171,7 +175,8 @@ def importPressed():
 	#else if all data valid, create MixProfile class for each profile
 	#and add to profile list and listbox
 	else:
-		for i in range(len(profileDF)):	
+		numProfs = len(profileDF)
+		for i in range(numProfs):	
 			tempProf = MixProfile(profileDF.iat[i,0], 
 										profileDF.iat[i,1],
 										profileDF.iat[i,2],
@@ -216,8 +221,41 @@ def decAngleEntry():
 	else:
 		angleEntryText.set(str(int(angleEntry.get()) - 15))
 
+#function to select previous profile in listbox
+def prevProf():
+	global curProfIndex
+	global curProfText
+	global profileList
+
+	if curProfIndex > 0:
+		curProfIndex = curProfIndex - 1
+		print(curProfIndex)
+		curProfText.set(profileList[curProfIndex].printInfoTextReturn())
+		#allProfListBox.activate(curProfIndex)
+		allProfListBox.see(curProfIndex)
+		allProfListBox.selection_clear(0, END)
+		allProfListBox.selection_set(curProfIndex)
+
+#function to select next profile in listbox
+def nextProf():
+	global curProfIndex
+	global numProfs
+	global curProfText
+	global profileList
+
+	if curProfIndex < numProfs - 1:
+		curProfIndex = curProfIndex + 1
+		print(curProfIndex)
+		curProfText.set(profileList[curProfIndex].printInfoTextReturn())
+		#allProfListBox.activate(curProfIndex)
+		allProfListBox.see(curProfIndex)
+		allProfListBox.selection_clear(0, END)
+		allProfListBox.selection_set(curProfIndex)
+
+# endregion
 
 
+# region Manual Control Tab
 #------------------------------#
 #------Manual Control Tab------#
 #------------------------------#
@@ -344,7 +382,6 @@ angleIncButton = Button(angleEntryFrame,
 						pady= 5)
 angleIncButton.pack(side= LEFT, padx= 5)
 
-
 #Angle set button
 angleSetButton = Button(angleFrame, 
 						text= "SET", 
@@ -393,8 +430,10 @@ manEStopButton = Button(manStartStopFrame,
 						command= eStopPressed,
 						border= 5)
 manEStopButton.pack(pady= 10)
+# endregion
 
 
+# region Automation Control Tab
 #----------------------------------#
 #------Automation Control Tab------#
 #----------------------------------#
@@ -430,7 +469,10 @@ profOptFrame = Frame(autoProfFrame)
 profOptFrame.pack()
 
 #create previous profile button
-prevProfButton = Button(profOptFrame, text= "PREV", width= 6)
+prevProfButton = Button(profOptFrame, 
+						text= "PREV", 
+						width= 6,
+						command= prevProf)
 prevProfButton.pack(side= LEFT, padx= 12, pady= 5)
 
 #create restart profile button
@@ -438,7 +480,10 @@ restartProfButton = Button(profOptFrame, text= "RESTART", width= 10)
 restartProfButton.pack(side= LEFT)
 
 #create next profile button
-nextProfButton = Button(profOptFrame, text= "NEXT", width= 6)
+nextProfButton = Button(profOptFrame, 
+						text= "NEXT", 
+						width= 6,
+						command= nextProf)
 nextProfButton.pack(side= LEFT, padx= 12)
 
 
@@ -450,7 +495,14 @@ allProfLabel = Label(autoProfFrame, text= "All Profiles", font= ('Arial', 30, 'b
 allProfLabel.pack(pady= 10)
 
 #all profiles list box
-allProfListBox = Listbox(autoProfFrame, height= 8, width= 32, font= ('Arial', 11))
+allProfListBox = Listbox(autoProfFrame, 
+						height= 8, 
+						width= 32, 
+						font= ('Arial', 11),
+						activestyle= 'dotbox',
+						selectbackground= 'green',
+						highlightthickness= 3,
+						selectmode= SINGLE)
 allProfListBox.pack()
 
 #import and clear all frame
@@ -506,6 +558,7 @@ autoEStopButton = Button(autoStartStopFrame,
 						#command= eStopPressed, # change to new func
 						border= 5)
 autoEStopButton.pack(pady= 10)
+# endregion
 
 
 #---------------------#
