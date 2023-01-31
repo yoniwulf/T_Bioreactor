@@ -7,7 +7,7 @@ from MixingProfileClass import *
 #import Functions
 import pandas as pd
 
-# region Notes/Ideas
+# region NOTES/IDEAS
 """ 
 Ideas:
 * set buttons change variables (global?) of rpm and angle
@@ -22,7 +22,7 @@ cancel import
 # endregion
 
 
-# region Setup
+# region SETUP
 #----------------------------#
 #------Setup GUI Window------#
 #----------------------------#
@@ -45,7 +45,7 @@ notebook.pack(expand= TRUE)
 
 #declare variables
 rpmVal = 0 #set rpm value
-angleVal = 0 #set angle value
+angleVal = 15 #set angle value
 profileList = [] #list for mixing profiles
 curProfIndex = 0 #index of current mixing profile
 numProfs = 0 #number of profiles
@@ -59,12 +59,12 @@ angleDialVal = 15 #actual angle value (can be set for testing)
 #set StringVars
 curProfText.set("RPM:           Angle:  \nTime:           00:00:00")
 rpmEntryText.set("0")
-angleEntryText.set("0")
+angleEntryText.set("15")
 timeRemainingText.set("Remaining:  00:00:00")
 # endregion
 
 
-# region Functions
+# region FUNCTIONS
 
 #---------------------#
 #------Functions------#
@@ -107,8 +107,8 @@ def setAngle():
 	try:
 		setInt = int(angleEntry.get())
 
-		if (setInt > 90) or (setInt < 0):
-			messagebox.showwarning(title= "Angle out of range", message= "Angle must be between 0 and 90")
+		if (setInt > 90) or (setInt < 15):
+			messagebox.showwarning(title= "Angle out of range", message= "Angle must be between 15 and 90")
 		
 		if setInt % 15 != 0:
 			messagebox.showwarning(title= "Angle increment error", message= "Angle must be in increments of 15")
@@ -123,7 +123,7 @@ def setAngle():
 	#if a decimal or non integer value is entered
 	except ValueError:
 		messagebox.showwarning(title= "Non-whole number Angle", message= "Angle must be a whole number")
-		angleEntryText.set('0')
+		angleEntryText.set('15')
 
 # function to send rpmVal, angleVal, and start command (needed?) to arduino
 def startPressed():
@@ -159,18 +159,41 @@ def importPressed():
 	#check if any cells are blank
 	if profileDF.isnull().any().any():
 		print("found a NaN")
+		messagebox.showwarning(title= "Invalid Data",
+								message= "found a NaN")
 
 	#check if any cells are negative
 	elif (profileDF < 0).any().any():
 		print("found a negative number")
+		messagebox.showwarning(title= "Invalid Data",
+								message= "found a negative number")
 
 	#check if RPM over 200
 	elif (profileDF['RPM'] > 200).any():
 		print("RPM over 200")
-	
+		messagebox.showwarning(title= "Invalid Data",
+								message= "RPM over 200")
+		
 	#check if Angle over 90
 	elif (profileDF['Angle'] > 90).any():
 		print("Angle over 90")
+		messagebox.showwarning(title= "Invalid Data",
+								message= "Angle over 90")
+
+	elif (profileDF['Angle'] < 15).any():
+		print("Angle under 15")
+		messagebox.showwarning(title= "Invalid Data",
+								message= "Angle under 15")
+
+	elif (profileDF['Angle'] % 15 != 0).any():
+		print("Angle must be in increments of 15")
+		messagebox.showwarning(title= "Invalid Data",
+								message= "Angle must be in increments of 15")
+
+	elif (profileDF['RPM'] % 10 != 0).any():
+		print("RPM must be in increments of 10")
+		messagebox.showwarning(title= "Invalid Data",
+								message= "RPM must be in increments of 10")
 
 	#else if all data valid, create MixProfile class for each profile
 	#and add to profile list and listbox
@@ -215,8 +238,8 @@ def incAngleEntry():
 
 # function to decrement value displayed in rpm entry box
 def decAngleEntry():
-	if (int(angleEntryText.get()) - 15) < 0:
-		angleEntryText.set('0')
+	if (int(angleEntryText.get()) - 15) < 15:
+		angleEntryText.set('15')
 	
 	else:
 		angleEntryText.set(str(int(angleEntry.get()) - 15))
@@ -255,7 +278,7 @@ def nextProf():
 # endregion
 
 
-# region Manual Control Tab
+# region MANUAL CONTROL TAB
 #------------------------------#
 #------Manual Control Tab------#
 #------------------------------#
@@ -358,7 +381,7 @@ angleEntryLabel.pack()
 angleEntryFrame = Frame(angleFrame)
 angleEntryFrame.pack()
 
-#rpm -10 button
+#angle -15 button
 angleDecButton = Button(angleEntryFrame, 
 						text= "-15",
 						command= decAngleEntry,
@@ -366,7 +389,7 @@ angleDecButton = Button(angleEntryFrame,
 						pady= 5)
 angleDecButton.pack(side= LEFT, padx= 5)
 
-#rpm entry box
+#angle entry box
 angleEntry = Entry(angleEntryFrame, 
 					font= ('Arial', 20), 
 					width= 5, 
@@ -374,7 +397,7 @@ angleEntry = Entry(angleEntryFrame,
 					justify= CENTER)
 angleEntry.pack(side= LEFT)
 
-#rpm +10 button
+#angle +15 button
 angleIncButton = Button(angleEntryFrame, 
 						text= "+15",
 						command= incAngleEntry,
@@ -405,6 +428,7 @@ manStartButton = Button(manStartStopFrame,
 						background= 'green',
 						text= "START", 
 						font= ('Arial', 20, 'bold'),
+						#fg= "white",
 						command= startPressed,
 						border= 5)
 manStartButton.pack(pady= 10)
@@ -416,6 +440,7 @@ manStopButton = Button(manStartStopFrame,
 						background= 'red',
 						text= "STOP",
 						font= ('Arial', 20, 'bold'),
+						#fg= "white",
 						command= stopPressed,
 						border= 5)
 manStopButton.pack(pady= 10)
@@ -433,7 +458,7 @@ manEStopButton.pack(pady= 10)
 # endregion
 
 
-# region Automation Control Tab
+# region AUTOMATION CONTROL TAB
 #----------------------------------#
 #------Automation Control Tab------#
 #----------------------------------#
@@ -568,8 +593,7 @@ autoEStopButton.pack(pady= 10)
 window.mainloop()
 
 
-
-#----- OLD CODE -----#
+# region OLD CODE
 """
 
 #RPM scale
@@ -640,3 +664,5 @@ allProfScroll.pack(side= RIGHT, fill= Y)
 #allProfScroll.config(command= t.xview)  # add some text object 
 
 """
+# endregion
+

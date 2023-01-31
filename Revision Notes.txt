@@ -1,3 +1,9 @@
+1/22/23:
+* changed minimum angle value to 15 degrees in 'setAngle' function
+* changed starting angle to 15 degrees
+* added warnings and more validation to import function
+
+
 1/17/23:
 * added functionality to prev and next profile buttons
 * added custom foldable sections to make code easier to read
