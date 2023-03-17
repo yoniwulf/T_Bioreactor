@@ -137,6 +137,7 @@ def stopPressed():
 	angleVal = 0
 	print("Stop Button pressed, slowing down")
 
+
 # function to send e-stop command to arduino
 def eStopPressed():
 	print("Emergency Stop Button pressed, shutting down all systems")
@@ -416,7 +417,7 @@ angleSetButton = Button(angleFrame,
 angleSetButton.pack(pady= 10)
 
 
-#------Start/Stop/E-Stop Control------#
+#------Start/Stop Control------#
 
 manStartStopFrame = Frame(manControlTab)
 manStartStopFrame.pack(side= LEFT, fill= 'y', padx= 30)
@@ -445,6 +446,7 @@ manStopButton = Button(manStartStopFrame,
 						border= 5)
 manStopButton.pack(pady= 10)
 
+
 #E-stop button
 manEStopButton = Button(manStartStopFrame, 
 						width= 6,
@@ -455,6 +457,7 @@ manEStopButton = Button(manStartStopFrame,
 						command= eStopPressed,
 						border= 5)
 manEStopButton.pack(pady= 10)
+
 # endregion
 
 
@@ -546,7 +549,7 @@ clearProfButton = Button(importClearFrame, text= "Clear All", width= 15)
 clearProfButton.pack(side= RIGHT, padx= 12)
 
 
-#------Start/Stop/E-Stop Control------#
+#------Start/Stop Control------#
 
 autoStartStopFrame = Frame(autoControlTab)
 autoStartStopFrame.pack(side= RIGHT, fill= 'y', padx= 30)
@@ -573,6 +576,7 @@ autoStopButton = Button(autoStartStopFrame,
 						border= 5)
 autoStopButton.pack(pady= 10)
 
+
 #E-stop button
 autoEStopButton = Button(autoStartStopFrame, 
 						width= 6,
@@ -583,6 +587,7 @@ autoEStopButton = Button(autoStartStopFrame,
 						#command= eStopPressed, # change to new func
 						border= 5)
 autoEStopButton.pack(pady= 10)
+
 # endregion
 
 
