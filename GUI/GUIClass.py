@@ -7,6 +7,10 @@ from MixingProfileClass import *
 import pandas as pd
 import serial
 
+
+buttonHeight = 3
+buttonWidth = 6
+
 # region NOTES/IDEAS
 """ 
 Ideas:
@@ -30,7 +34,7 @@ class GUIClass:
 		master.title("T-BioReactor Controls")
 
 		# declare notebook to allow different tabs
-		self.notebook = ttk.Notebook(master)
+		self.notebook = ttk.Notebook(master, width=780)
 
 		#declare manual and automatic control tabs, add to notebook and grid
 		self.manControlTab = Frame(self.notebook)
@@ -47,20 +51,28 @@ class GUIClass:
 		self.profileList = [] #list for mixing profiles
 		self.curProfIndex = 0 #index of current mixing profile
 		self.numProfs = 0 #number of profiles
-		self.curProfText = StringVar() #stringVar for current profile
+		self.curProfRPMText = StringVar()
+		self.curProfAngleText = StringVar()
+		self.curProfTimeText = StringVar()
+		self.curProfTimeLeftText = StringVar()
+		#self.curProfText = StringVar() #stringVar for current profile
 		self.rpmEntryText = StringVar() #stringVar for rpm displayed in self.rpmEntry widget
 		self.angleEntryText = StringVar() #stringVar for angle displayed in self.angleEntry widget
-		self.timeRemainingText = StringVar() #stringVar for text displayed in current profile message 2
+		#self.timeRemainingText = StringVar() #stringVar for text displayed in current profile message 2
 		self.rpmDialVal = 50 #actual rpm value (can be set for testing)
 		self.angleDialVal = 15 #actual angle value (can be set for testing)
 
 		#set StringVars
-		self.curProfText.set("RPM:           Angle:  \nTime:           00:00:00")
+		self.curProfRPMText.set("RPM:                         ")
+		self.curProfAngleText.set("Angle:                        ")
+		self.curProfTimeText.set("Time:           00:00:00")
+		self.curProfTimeLeftText.set("Remaining:  00:00:00")
+		#self.curProfText.set("RPM:           Angle:  \nTime:           00:00:00")
 		self.rpmEntryText.set("0")
 		self.angleEntryText.set("15")
-		self.timeRemainingText.set("Remaining:  00:00:00")
+		#self.timeRemainingText.set("Remaining:  00:00:00")
 
-		self.ser = serial.Serial('/dev/ttyACM0', 9600, timeout = 1)
+		#self.ser = serial.Serial('/dev/ttyACM0', 9600, timeout = 1)
 
 
 		# region MANUAL CONTROL TAB
@@ -71,11 +83,11 @@ class GUIClass:
 		#------RPM Control------#
 
 		self.rpmFrame = Frame(self.manControlTab)
-		self.rpmFrame.pack(side= LEFT, fill= 'y', padx= 30)
+		self.rpmFrame.pack(side= LEFT, fill= 'both', expand= True)
 
 		#RPM control section label
-		self.rpmLabel = Label(self.rpmFrame, text= "RPM", font= ('Arial', 30, 'bold'))
-		self.rpmLabel.pack(pady= 5)
+		self.rpmLabel = Label(self.rpmFrame, text= "RPM", font= ('Arial', 24, 'bold'))
+		self.rpmLabel.pack(pady= 3)
 
 		#RPM dial
 		self.rpmDial = Meter(self.rpmFrame, 
@@ -83,12 +95,13 @@ class GUIClass:
 							end= 200, 
 							major_divisions= 20, 
 							minor_divisions= 5,
-							radius= 230,
+							radius= 190,
 							border_width= 0,
 							start_angle= 205,
 							end_angle= -230,
+							text_font= ('Arial', 14, 'bold'),
 							text= " RPM")
-		self.rpmDial.pack(pady= 10)
+		self.rpmDial.pack(pady= 4)
 		self.rpmDial.set(self.rpmDialVal)
 
 		#rpm entry box label
@@ -102,9 +115,11 @@ class GUIClass:
 		#rpm -10 button
 		self.rpmDecButton = Button(self.rpmEntryFrame, 
 								text= "-10",
+								font= ('Arial', 11, 'bold'),
 								command= self.decRpmEntry,
-								padx= 5,
-								pady= 5)
+								padx= 3,
+								pady= 4
+								)
 		self.rpmDecButton.pack(side= LEFT, padx= 5)
 
 		#rpm entry box
@@ -118,30 +133,33 @@ class GUIClass:
 		#rpm +10 button
 		self.rpmIncButton = Button(self.rpmEntryFrame, 
 								text= "+10",
+								font= ('Arial', 11, 'bold'),
 								command= self.incRpmEntry,
-								padx= 5,
-								pady= 5)
+								padx= 2,
+								pady= 4
+								)
 		self.rpmIncButton.pack(side= LEFT, padx= 5)
 
 		#RPM set button
-		self.rpmSetButton = Button(self.rpmFrame, 
-								text= "SET", 
+		self.rpmSetButton = Button(self.rpmFrame,
+			     				width= 12,
+								text= "SET",
+								font= ('Arial', 15, 'bold'),
 								command= self.setRpm,
-								padx= 30,
-								pady= 5,
 								border= 5,
 								background= 'green')
-		self.rpmSetButton.pack(pady= 10)
+		self.rpmSetButton.pack(pady= 6)
 
 
 		#------Angle Control------#
 
 		self.angleFrame = Frame(self.manControlTab)
-		self.angleFrame.pack(side= LEFT, fill= 'y', padx= 20)
+		self.angleFrame.pack(side= LEFT, fill= 'both', expand= True)
+		#self.angleFrame.pack(anchor= 'center', fill= 'both', padx= 30)
 
 		#angle control section label
-		self.angleLabel = Label(self.angleFrame, text= "ANGLE", font= ('Arial', 30, 'bold'), width= 7)
-		self.angleLabel.pack(pady= 5)
+		self.angleLabel = Label(self.angleFrame, text= "ANGLE", font= ('Arial', 24, 'bold'), width= 7)
+		self.angleLabel.pack(pady= 3)
 
 		#angle dial
 		self.angleDial = Meter(self.angleFrame, 
@@ -149,13 +167,14 @@ class GUIClass:
 							end= 90, 
 							major_divisions= 15, 
 							minor_divisions= 5,
-							radius= 230,
+							radius= 190,
 							border_width= 0,
 							start_angle= 0,
 							end_angle= 90,
-							text= " Degrees"
+							text= " Degrees",
+							text_font= ('Arial', 14, 'bold')
 							)
-		self.angleDial.pack(pady= 10)
+		self.angleDial.pack(pady= 4)
 		self.angleDial.set(self.angleDialVal)
 
 		#angle entry box label
@@ -169,9 +188,11 @@ class GUIClass:
 		#angle -15 button
 		self.angleDecButton = Button(self.angleEntryFrame, 
 								text= "-15",
+								font= ('Arial', 11, 'bold'),
 								command= self.decAngleEntry,
-								padx= 5,
-								pady= 5)
+								padx= 3,
+								pady= 4
+								)
 		self.angleDecButton.pack(side= LEFT, padx= 5)
 
 		#angle entry box
@@ -185,62 +206,69 @@ class GUIClass:
 		#angle +15 button
 		self.angleIncButton = Button(self.angleEntryFrame, 
 								text= "+15",
+								font= ('Arial', 11, 'bold'),
 								command= self.incAngleEntry,
-								padx= 5,
-								pady= 5)
+								padx= 2,
+								pady= 4
+								)
 		self.angleIncButton.pack(side= LEFT, padx= 5)
 
 		#Angle set button
 		self.angleSetButton = Button(self.angleFrame, 
-								text= "SET", 
+								width= 12,
+								text= "SET",
+								font= ('Arial', 15, 'bold'),
 								command= self.setAngle,
-								padx= 30,
-								pady= 5,
+								#padx= 30,
+								#pady= 5,
 								border= 5,
 								background= 'green')
-		self.angleSetButton.pack(pady= 10)
+		self.angleSetButton.pack(pady= 6)
 
 
 		#------Start/Stop Control------#
 
 		self.manStartStopFrame = Frame(self.manControlTab)
-		self.manStartStopFrame.pack(side= LEFT, fill= 'y', padx= 30)
+		self.manStartStopFrame.pack(side= LEFT, fill= 'both', expand= True)
 
 		#Start button
 		self.manStartButton = Button(self.manStartStopFrame, 
-								width= 6,
-								height= 3,
+								width= buttonWidth,
+								height= buttonHeight,
 								background= 'green',
 								text= "START", 
-								font= ('Arial', 20, 'bold'),
+								font= ('Arial', 18, 'bold'),
 								#fg= "white",
+								pady= 1,
 								command= self.startPressed,
 								border= 5)
-		self.manStartButton.pack(pady= 10)
+		self.manStartButton.pack(pady= 4)
 
 		#Stop button
 		self.manStopButton = Button(self.manStartStopFrame, 
-								width= 6,
-								height= 3,
+								width= buttonWidth,
+								height= buttonHeight,
 								background= 'red',
 								text= "STOP",
-								font= ('Arial', 20, 'bold'),
+								font= ('Arial', 18, 'bold'),
+								pady= 1,
 								#fg= "white",
 								command= self.stopPressed,
 								border= 5)
-		self.manStopButton.pack(pady= 10)
+		self.manStopButton.pack(pady= 4)
 
 
 		#E-stop button
 		self.manEStopButton = Button(self.manStartStopFrame, 
-								width= 6,
-								height= 3,
+								width= buttonWidth,
+								height= buttonHeight,
 								background= 'yellow',
 								text= "E-STOP", 
-								font= ('Arial', 20, 'bold'),
+								font= ('Arial', 18, 'bold'),
+								pady= 1,
 								command= self.eStopPressed,
 								border= 5)
-		self.manEStopButton.pack(pady= 10)
+		self.manEStopButton.pack(pady= 4)
 
 		# endregion
 
@@ -250,34 +278,93 @@ class GUIClass:
 		#------Automation Control Tab------#
 		#----------------------------------#
 
+
+		#------All Profiles display------#
+
+		#all profiles frame
+		self.autoAllProfFrame = Frame(self.autoControlTab)
+		self.autoAllProfFrame.pack(side= LEFT, fill= 'both', expand= True)
+
+		#all profiles Label
+		self.allProfLabel = Label(self.autoAllProfFrame, text= "All Profiles", font= ('Arial', 24, 'bold'))
+		self.allProfLabel.pack(pady= 10)
+
+		#all profiles list box
+		self.allProfListBox = Listbox(self.autoAllProfFrame, 
+								height= 14, 
+								width= 32, 
+								font= ('Arial', 11),
+								activestyle= 'dotbox',
+								selectbackground= 'green',
+								highlightthickness= 3,
+								selectmode= SINGLE)
+		self.allProfListBox.pack()
+
+		#import and clear all frame
+		self.importClearFrame = Frame(self.autoAllProfFrame)
+		self.importClearFrame.pack(pady= 10)
+
+		#import profiles button
+		self.importProfButton = Button(self.importClearFrame, 
+									text= "Import",
+									font= ('Arial', 12, 'bold'),
+									width= 11, 
+									command= self.importPressed)
+		self.importProfButton.pack(side= LEFT, padx= 12)
+
+		#clear profiles button
+		self.clearProfButton = Button(self.importClearFrame, 
+									text= "Clear All", 
+									font= ('Arial', 12, 'bold'),
+									width= 11)
+		self.clearProfButton.pack(side= RIGHT, padx= 12)
+
+
 		#------Current Profile display------#
 
 		#profiles frame
-		self.autoProfFrame = Frame(self.autoControlTab)
-		self.autoProfFrame.pack(side= LEFT, fill= 'y', padx= 30, expand= True)
+		self.autoCurProfFrame = Frame(self.autoControlTab)
+		self.autoCurProfFrame.pack(side= LEFT, fill= 'both', expand= True)
 
 		#current profile Label
-		self.curProfLabel = Label(self.autoProfFrame, text= "Current Profile", font= ('Arial', 30, 'bold'))
-		self.curProfLabel.pack()
+		self.curProfLabel = Label(self.autoCurProfFrame, text= "Current Profile", font= ('Arial', 24, 'bold'))
+		self.curProfLabel.pack(pady= 10)
 
-		#create message for current profile, pack into curProfFrame
-		self.curProfMes = Message(self.autoProfFrame, 
-									textvariable= self.curProfText,
+		#create message for current profile RPM, pack into autocurProfFrame
+		self.curProfRPMMes = Message(self.autoCurProfFrame, 
+									textvariable= self.curProfRPMText,
 									justify= 'left',
 									font= ('Arial', 16),
 									width= 500)
-		self.curProfMes.pack()
+		self.curProfRPMMes.pack()
 
-		#create message for remaining time
-		self.curProfMes = Message(self.autoProfFrame, 
-									textvariable= self.timeRemainingText,
+		#create message for current profile Angle, pack into autocurProfFrame
+		self.curProfAngleMes = Message(self.autoCurProfFrame, 
+									textvariable= self.curProfAngleText,
 									justify= 'left',
 									font= ('Arial', 16),
 									width= 500)
-		self.curProfMes.pack()
+		self.curProfAngleMes.pack()
+
+		#create message for current profile Time, pack into autocurProfFrame
+		self.curProfTimeMes = Message(self.autoCurProfFrame, 
+									textvariable= self.curProfTimeText,
+									justify= 'left',
+									font= ('Arial', 16),
+									width= 500)
+		self.curProfTimeMes.pack()
+
+		#create message for current profile Time Remaining, pack into autocurProfFrame
+		self.curProfTimeLeftMes = Message(self.autoCurProfFrame, 
+									textvariable= self.curProfTimeLeftText,
+									justify= 'left',
+									font= ('Arial', 16),
+									width= 500)
+		self.curProfTimeLeftMes.pack()
+
 
 		#create frame for profile options
-		self.profOptFrame = Frame(self.autoProfFrame)
+		self.profOptFrame = Frame(self.autoCurProfFrame)
 		self.profOptFrame.pack()
 
 		#create previous profile button
@@ -300,77 +387,46 @@ class GUIClass:
 
 
 
-		#------All Profiles display------#
-
-		#all profiles Label
-		self.allProfLabel = Label(self.autoProfFrame, text= "All Profiles", font= ('Arial', 30, 'bold'))
-		self.allProfLabel.pack(pady= 10)
-
-		#all profiles list box
-		self.allProfListBox = Listbox(self.autoProfFrame, 
-								height= 8, 
-								width= 32, 
-								font= ('Arial', 11),
-								activestyle= 'dotbox',
-								selectbackground= 'green',
-								highlightthickness= 3,
-								selectmode= SINGLE)
-		self.allProfListBox.pack()
-
-		#import and clear all frame
-		self.importClearFrame = Frame(self.autoProfFrame)
-		self.importClearFrame.pack(pady= 10)
-
-		#import profiles button
-		self.importProfButton = Button(self.importClearFrame, 
-									text= "Import", 
-									width= 15, 
-									command= self.importPressed)
-		self.importProfButton.pack(side= LEFT, padx= 12)
-
-		#clear profiles button
-		self.clearProfButton = Button(self.importClearFrame, text= "Clear All", width= 15)
-		self.clearProfButton.pack(side= RIGHT, padx= 12)
-
-
 		#------Start/Stop Control------#
 
 		self.autoStartStopFrame = Frame(self.autoControlTab)
-		self.autoStartStopFrame.pack(side= RIGHT, fill= 'y', padx= 30)
+		self.autoStartStopFrame.pack(side= RIGHT, fill= 'both', expand= True)
 
 		#Start button
 		self.autoStartButton = Button(self.autoStartStopFrame, 
-								width= 6,
-								height= 3,
+								width= buttonWidth,
+								height= buttonHeight,
 								background= 'green',
 								text= "START", 
-								font= ('Arial', 20, 'bold'),
-								#command= startPressed, # change to new func
+								font= ('Arial', 18, 'bold'),
+								#fg= "white",
+								pady= 1,
+								command= self.startPressed,
 								border= 5)
-		self.autoStartButton.pack(pady= 10)
+		self.autoStartButton.pack(pady= 4)
 
 		#Stop button
 		self.autoStopButton = Button(self.autoStartStopFrame, 
-								width= 6,
-								height= 3,
+								width= buttonWidth,
+								height= buttonHeight,
 								background= 'red',
 								text= "STOP",
-								font= ('Arial', 20, 'bold'),
+								font= ('Arial', 18, 'bold'),
 								#command= stopPressed, # change to new func
 								border= 5)
-		self.autoStopButton.pack(pady= 10)
+		self.autoStopButton.pack(pady= 4)
 
 
 		#E-stop button
 		self.autoEStopButton = Button(self.autoStartStopFrame, 
-								width= 6,
-								height= 3,
+								width= buttonWidth,
+								height= buttonHeight,
 								background= 'yellow',
 								text= "E-STOP", 
-								font= ('Arial', 20, 'bold'),
+								font= ('Arial', 18, 'bold'),
 								#command= eStopPressed, # change to new func
 								border= 5)
-		self.autoEStopButton.pack(pady= 10)
+		self.autoEStopButton.pack(pady= 4)
 
 		# endregion
 
@@ -598,6 +654,14 @@ class GUIClass:
 
 	# endregion
 
+
+#built in main for testing
+#"""
+window = Tk()
+guiObj = GUIClass(window)
+window.geometry("800x400")
+window.mainloop()
+#"""
 
 # region OLD CODE
 """

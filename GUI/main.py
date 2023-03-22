@@ -6,5 +6,5 @@ from GUIClass import*
 #----------------------------#
 window = Tk()
 guiObj = GUIClass(window)
-window.geometry("800x480")
+window.geometry("800x400")
 window.mainloop()
