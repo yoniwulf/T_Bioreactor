@@ -20,3 +20,21 @@ class MixProfile:
 		if self.rpm < 100:
 			self.infoText = self.infoText[0:9] + "  " + self.infoText[9:]
 		return self.infoText
+	
+	"""
+	def getRPM(self):
+		return self.rpm
+	
+	def getAngle(self):
+		return self.angle
+	
+	def getHour(self):
+		return self.hour
+	
+	def getMin(self):
+		return self.min
+	
+	def getSec(self):
+		return self.sec
+
+	"""

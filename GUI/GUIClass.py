@@ -6,6 +6,7 @@ from tkdial import*
 from MixingProfileClass import *
 import pandas as pd
 import serial
+import copy
 
 
 buttonHeight = 3
@@ -61,18 +62,19 @@ class GUIClass:
 		#self.timeRemainingText = StringVar() #stringVar for text displayed in current profile message 2
 		self.rpmDialVal = 50 #actual rpm value (can be set for testing)
 		self.angleDialVal = 15 #actual angle value (can be set for testing)
+		self.curProfile = MixProfile(0,0,0,0,0)
 
 		#set StringVars
-		self.curProfRPMText.set("RPM:                         ")
-		self.curProfAngleText.set("Angle:                        ")
-		self.curProfTimeText.set("Time:           00:00:00")
-		self.curProfTimeLeftText.set("Remaining:  00:00:00")
+		self.curProfRPMText.set("100")
+		self.curProfAngleText.set("15")
+		self.curProfTimeText.set("00:00:00")
+		self.curProfTimeLeftText.set("00:00:00")
 		#self.curProfText.set("RPM:           Angle:  \nTime:           00:00:00")
 		self.rpmEntryText.set("0")
 		self.angleEntryText.set("15")
 		#self.timeRemainingText.set("Remaining:  00:00:00")
 
-		#self.ser = serial.Serial('/dev/ttyACM0', 9600, timeout = 1)
+		self.ser = serial.Serial('/dev/ttyACM0', 9600, timeout = 1)
 
 
 		# region MANUAL CONTROL TAB
@@ -330,37 +332,98 @@ class GUIClass:
 		self.curProfLabel = Label(self.autoCurProfFrame, text= "Current Profile", font= ('Arial', 24, 'bold'))
 		self.curProfLabel.pack(pady= 10)
 
-		#create message for current profile RPM, pack into autocurProfFrame
-		self.curProfRPMMes = Message(self.autoCurProfFrame, 
+		#current profile RPM frame
+		self.curProfRPMFrame = Frame(self.autoCurProfFrame)
+		self.curProfRPMFrame.pack(fill= 'x')
+
+		#current profile RPM label
+		self.curProfRPMLabel = Label(self.curProfRPMFrame, 
+			       					text= "RPM:", 
+									font= ('Arial', 18), 
+									justify= 'left',
+									#bg= 'blue',
+									#width= 5
+									)
+		self.curProfRPMLabel.pack(side= LEFT)
+
+		#current profile RPM message
+		self.curProfRPMMes = Message(self.curProfRPMFrame, 
 									textvariable= self.curProfRPMText,
-									justify= 'left',
-									font= ('Arial', 16),
-									width= 500)
-		self.curProfRPMMes.pack()
+									justify= 'right',
+									font= ('Arial', 18),
+									#width= 5
+									)
+		self.curProfRPMMes.pack(side= RIGHT)
 
-		#create message for current profile Angle, pack into autocurProfFrame
-		self.curProfAngleMes = Message(self.autoCurProfFrame, 
+		#current profile Angle frame
+		self.curProfAngleFrame = Frame(self.autoCurProfFrame)
+		self.curProfAngleFrame.pack(fill= 'x')
+
+		#current profile Angle label
+		self.curProfAngleLabel = Label(self.curProfAngleFrame, 
+			       					text= "Angle:", 
+									font= ('Arial', 18), 
+									justify= 'left',
+									#bg= 'blue',
+									#width= 5
+									)
+		self.curProfAngleLabel.pack(side= LEFT)
+
+		#current profile Angle message
+		self.curProfAngleMes = Message(self.curProfAngleFrame, 
 									textvariable= self.curProfAngleText,
-									justify= 'left',
-									font= ('Arial', 16),
-									width= 500)
-		self.curProfAngleMes.pack()
+									justify= 'right',
+									font= ('Arial', 18),
+									#width= 5
+									)
+		self.curProfAngleMes.pack(side= RIGHT)
 
-		#create message for current profile Time, pack into autocurProfFrame
-		self.curProfTimeMes = Message(self.autoCurProfFrame, 
+		#current profile Time frame
+		self.curProfTimeFrame = Frame(self.autoCurProfFrame)
+		self.curProfTimeFrame.pack(fill= 'x')
+
+		#current profile Time label
+		self.curProfTimeLabel = Label(self.curProfTimeFrame, 
+			       					text= "Time:", 
+									font= ('Arial', 18), 
+									justify= 'left',
+									#bg= 'blue',
+									#width= 5
+									)
+		self.curProfTimeLabel.pack(side= LEFT)
+
+		#current profile Time message
+		self.curProfTimeMes = Message(self.curProfTimeFrame, 
 									textvariable= self.curProfTimeText,
-									justify= 'left',
-									font= ('Arial', 16),
-									width= 500)
-		self.curProfTimeMes.pack()
+									justify= 'right',
+									font= ('Arial', 18),
+									#width= 5
+									)
+		self.curProfTimeMes.pack(side= RIGHT)
 
-		#create message for current profile Time Remaining, pack into autocurProfFrame
-		self.curProfTimeLeftMes = Message(self.autoCurProfFrame, 
-									textvariable= self.curProfTimeLeftText,
+		#current profile Time left frame
+		self.curProfTimeLeftFrame = Frame(self.autoCurProfFrame)
+		self.curProfTimeLeftFrame.pack(fill= 'x')
+
+		#current profile Time left label
+		self.curProfTimeLeftLabel = Label(self.curProfTimeLeftFrame, 
+			       					text= "Remaining:", 
+									font= ('Arial', 18), 
 									justify= 'left',
-									font= ('Arial', 16),
-									width= 500)
-		self.curProfTimeLeftMes.pack()
+									padx= 0
+									#bg= 'blue',
+									#width= 5
+									)
+		self.curProfTimeLeftLabel.pack(side= LEFT)
+
+		#current profile Time left message
+		self.curProfTimeLeftMes = Message(self.curProfTimeLeftFrame, 
+									textvariable= self.curProfTimeLeftText,
+									justify= 'right',
+									font= ('Arial', 18),
+									#width= 5
+									)
+		self.curProfTimeLeftMes.pack(side= RIGHT)
 
 
 		#create frame for profile options
@@ -463,7 +526,7 @@ class GUIClass:
 				print("rpm set button clicked, entry rpm is " + str(setInt)
 						+ " rpmVal is " + str(self.rpmVal))
 				
-				self.rpmDial.set(setInt) #for testing
+				#self.rpmDial.set(setInt) #for testing
 		
 		#if a decimal or non integer value is entered
 		except ValueError:
@@ -502,7 +565,7 @@ class GUIClass:
 		# send rpmVal and self.angleVal to arduino
 		print("Start Button pressed, rpmVal: " + str(self.rpmVal) + ", self.angleVal: " + str(self.angleVal))
 
-		data = str(self.rpmVal) + "," + str(self.angleVal)
+		data = str(self.rpmVal) + "," + str(self.angleVal) + ",1"
 		self.ser.write(data.encode())
 
 	# function to send stop command to arduino
@@ -512,17 +575,21 @@ class GUIClass:
 		self.rpmVal = 0
 		self.angleVal = 0
 		print("Stop Button pressed, slowing down")
+		data = str(self.rpmVal) + "," + str(self.angleVal) + ",2"
+		self.ser.write(data.encode())
 
 
 	# function to send e-stop command to arduino
 	def eStopPressed(self):
 		print("Emergency Stop Button pressed, shutting down all systems")
+		data = str(self.rpmVal) + "," + str(self.angleVal) + ",3"
+		self.ser.write(data.encode())
 
 	# function to import data from excel sheet
 	def importPressed(self):
 		#insure access to variables 
 		self.profileList
-		self.curProfText
+		#self.curProfText
 		self.allProfListBox
 		self.numProfs
 		
@@ -587,7 +654,16 @@ class GUIClass:
 				#print(self.profileList[i].rpm)
 
 			#set current provile to profile at self.curProfIndex
-			self.curProfText.set(self.profileList[self.curProfIndex].printInfoTextReturn())
+			self.curProfile = copy.deepcopy(self.profileList[self.curProfIndex])
+			self.curProfRPMText.set(self.curProfile.rpm)
+			self.curProfAngleText.set(self.curProfile.angle)
+			self.curProfTimeText.set(f"{self.curProfile.hour:02}:{self.curProfile.min:02}:{self.curProfile.sec:02}")
+			self.curProfTimeLeftText.set(f"{self.curProfile.hour:02}:{self.curProfile.min:02}:{self.curProfile.sec:02}")
+
+			#f"    Time: {self.hour:02}:{self.min:02}:{self.sec:02}"
+
+	#def getProfTime(self, profile):
+		
 
 	# function to increment value displayed in rpm entry box
 	def incRpmEntry(self):
@@ -624,13 +700,17 @@ class GUIClass:
 	#function to select previous profile in listbox
 	def prevProf(self):
 		self.curProfIndex
-		self.curProfText
+		#self.curProfText
 		self.profileList
 
 		if self.curProfIndex > 0:
 			self.curProfIndex = self.curProfIndex - 1
 			print(self.curProfIndex)
-			self.curProfText.set(self.profileList[self.curProfIndex].printInfoTextReturn())
+			self.curProfile = copy.deepcopy(self.profileList[self.curProfIndex])
+			self.curProfRPMText.set(self.curProfile.rpm)
+			self.curProfAngleText.set(self.curProfile.angle)
+			self.curProfTimeText.set(f"{self.curProfile.hour:02}:{self.curProfile.min:02}:{self.curProfile.sec:02}")
+			self.curProfTimeLeftText.set(f"{self.curProfile.hour:02}:{self.curProfile.min:02}:{self.curProfile.sec:02}")
 			#self.allProfListBox.activate(self.curProfIndex)
 			self.allProfListBox.see(self.curProfIndex)
 			self.allProfListBox.selection_clear(0, END)
@@ -640,13 +720,17 @@ class GUIClass:
 	def nextProf(self):
 		self.curProfIndex
 		self.numProfs
-		self.curProfText
+		#self.curProfText
 		self.profileList
 
 		if self.curProfIndex < self.numProfs - 1:
 			self.curProfIndex = self.curProfIndex + 1
 			print(self.curProfIndex)
-			self.curProfText.set(self.profileList[self.curProfIndex].printInfoTextReturn())
+			self.curProfile = copy.deepcopy(self.profileList[self.curProfIndex])
+			self.curProfRPMText.set(self.curProfile.rpm)
+			self.curProfAngleText.set(self.curProfile.angle)
+			self.curProfTimeText.set(f"{self.curProfile.hour:02}:{self.curProfile.min:02}:{self.curProfile.sec:02}")
+			self.curProfTimeLeftText.set(f"{self.curProfile.hour:02}:{self.curProfile.min:02}:{self.curProfile.sec:02}")
 			#self.allProfListBox.activate(self.curProfIndex)
 			self.allProfListBox.see(self.curProfIndex)
 			self.allProfListBox.selection_clear(0, END)
@@ -660,7 +744,17 @@ class GUIClass:
 window = Tk()
 guiObj = GUIClass(window)
 window.geometry("800x400")
+#use threading to separate serial receiving and main loop
 window.mainloop()
+while True:
+	if guiObj.ser.in_waiting > 0:
+		received_data = guiObj.ser.readline().decode().strip()
+		print("received from Arduino: "+ received_data)
+		break
+
+
+
+
 #"""
 
 # region OLD CODE
