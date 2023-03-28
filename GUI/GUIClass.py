@@ -5,6 +5,7 @@ from tkinter import messagebox
 from tkdial import*
 from MixingProfileClass import *
 import pandas as pd
+import openpyxl
 import serial
 import copy
 
@@ -74,7 +75,7 @@ class GUIClass:
 		self.angleEntryText.set("15")
 		#self.timeRemainingText.set("Remaining:  00:00:00")
 
-		self.ser = serial.Serial('/dev/ttyACM0', 9600, timeout = 1)
+		#self.ser = serial.Serial('/dev/ttyACM0', 9600, timeout = 1)
 
 
 		# region MANUAL CONTROL TAB
@@ -291,11 +292,15 @@ class GUIClass:
 		self.allProfLabel = Label(self.autoAllProfFrame, text= "All Profiles", font= ('Arial', 24, 'bold'))
 		self.allProfLabel.pack(pady= 10)
 
+		#all profiles list box columns Label
+		self.allProfColLabel = Label(self.autoAllProfFrame, text= "RPM      Angle         Time     ", font= ('Arial', 14))
+		self.allProfColLabel.pack(pady= 3)
+
 		#all profiles list box
 		self.allProfListBox = Listbox(self.autoAllProfFrame, 
-								height= 14, 
-								width= 32, 
-								font= ('Arial', 11),
+								height= 8, 
+								width= 20, 
+								font= ('Arial', 16),
 								activestyle= 'dotbox',
 								selectbackground= 'green',
 								highlightthickness= 3,
@@ -397,7 +402,7 @@ class GUIClass:
 									textvariable= self.curProfTimeText,
 									justify= 'right',
 									font= ('Arial', 18),
-									#width= 5
+									width= 100
 									)
 		self.curProfTimeMes.pack(side= RIGHT)
 
@@ -421,7 +426,7 @@ class GUIClass:
 									textvariable= self.curProfTimeLeftText,
 									justify= 'right',
 									font= ('Arial', 18),
-									#width= 5
+									width= 100
 									)
 		self.curProfTimeLeftMes.pack(side= RIGHT)
 
@@ -597,7 +602,8 @@ class GUIClass:
 		filePath = filedialog.askopenfilename()
 
 		#import excel file as pandas dataset
-		profileDF = pd.read_excel(filePath)
+		profileDF = pd.read_excel(filePath, engine= 'openpyxl')
+		
 		#print(profileDF)
 
 		#check if any cells are blank

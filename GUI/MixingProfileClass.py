@@ -16,9 +16,9 @@ class MixProfile:
 		return self.infoText
 	
 	def printInfoTextLine(self):
-		self.infoText = "RPM: " + str(self.rpm,) + "    Angle: " + str(self.angle) + f"    Time: {self.hour:02}:{self.min:02}:{self.sec:02}"
+		self.infoText = " " + str(self.rpm,) + "       " + str(self.angle) + f"       {self.hour:02}:{self.min:02}:{self.sec:02}"
 		if self.rpm < 100:
-			self.infoText = self.infoText[0:9] + "  " + self.infoText[9:]
+			self.infoText = self.infoText[0:4] + "  " + self.infoText[4:]
 		return self.infoText
 	
 	"""
