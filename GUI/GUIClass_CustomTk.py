@@ -26,6 +26,9 @@ Ideas:
 	* user must click set to update value
 * change start button to "update" when new values for rpm or angle are set
 
+* first round, set, set, start
+* while running, set buttons turn to update, clicking them will change the angle/rpm w/o pressing start
+
 
 cancel import
  """
@@ -46,10 +49,8 @@ class GUIClass:
 		#declare manual and automatic control tabs, add to notebook and grid
 		self.manControlTab = customtkinter.CTkFrame(master = self.tabView)
 		self.autoControlTab = customtkinter.CTkFrame(master = self.tabView)
-		#testTab = Frame(notebook)
 		self.tabView.add("Manual Control")
 		self.tabView.add("Automatic Control")
-		#notebook.add(testTab, text= "test tab")
 		self.tabView.pack(expand= TRUE)
 
 		#declare variables
@@ -62,24 +63,25 @@ class GUIClass:
 		self.curProfAngleText = StringVar()
 		self.curProfTimeText = StringVar()
 		self.curProfTimeLeftText = StringVar()
-		#self.curProfText = StringVar() #stringVar for current profile
 		self.rpmEntryText = StringVar() #stringVar for rpm displayed in self.rpmEntry widget
 		self.angleEntryText = StringVar() #stringVar for angle displayed in self.angleEntry widget
-		#self.timeRemainingText = StringVar() #stringVar for text displayed in current profile message 2
 		self.rpmDialVal = 50 #actual rpm value (can be set for testing)
 		self.angleDialVal = 15 #actual angle value (can be set for testing)
 		self.curProfile = MixProfile(0,0,0,0,0)
+		self.rpmSetText = StringVar()
+		self.angleSetText = StringVar()
+		self.running = False
 
 		#set StringVars
 		self.curProfRPMText.set("100")
 		self.curProfAngleText.set("15")
 		self.curProfTimeText.set("00:00:00")
 		self.curProfTimeLeftText.set("00:00:00")
-		#self.curProfText.set("RPM:           Angle:  \nTime:           00:00:00")
 		self.rpmEntryText.set("0")
 		self.angleEntryText.set("15")
-		#self.timeRemainingText.set("Remaining:  00:00:00")
-
+		self.rpmSetText.set("SET")
+		self.angleSetText.set("SET")
+		
 		#self.ser = serial.Serial('/dev/ttyACM0', 9600, timeout = 1)
 
 
@@ -90,126 +92,128 @@ class GUIClass:
 
 		#------RPM Control------#
 
-		self.rpmFrame = customtkinter.CTkFrame(master = self.tabView.tab("Manual Control"), fg_color= "transparent")
+		self.rpmFrame = customtkinter.CTkFrame(master = self.tabView.tab("Manual Control"), 
+					 							fg_color= "transparent")
 		self.rpmFrame.pack(side= LEFT, fill= 'both', expand= True)
 
 		#RPM control section label
-		self.rpmLabel = customtkinter.CTkLabel(master = self.rpmFrame, text= "RPM", font= ('Arial', 24, 'bold'))
+		self.rpmLabel = customtkinter.CTkLabel(master = self.rpmFrame, 
+					 							text= "RPM", 
+												font= ('Arial', 24, 'bold'))
 		self.rpmLabel.pack(pady= 2)
 
 		#RPM dial
 		self.rpmDial = Meter(self.rpmFrame, 
-							start= 0, 
-							end= 200, 
-							major_divisions= 20, 
-							minor_divisions= 5,
-							radius= 190,
-							border_width= 0,
-							start_angle= 205,
-							end_angle= -230,
-							text_font= ('Arial', 14, 'bold'),
-							text= " RPM",
-							scroll= False)
+								start= 0, 
+								end= 200, 
+								major_divisions= 20, 
+								minor_divisions= 5,
+								radius= 190,
+								border_width= 0,
+								start_angle= 205,
+								end_angle= -230,
+								text_font= ('Arial', 14, 'bold'),
+								text= " RPM",
+								scroll= False)
 		self.rpmDial.pack(pady= 4)
 		self.rpmDial.set(self.rpmDialVal)
 
 		#rpm entry box label
-		self.rpmEntryLabel = customtkinter.CTkLabel(master = self.rpmFrame, text= "Set RPM:", font= ('Arial', 18))
+		self.rpmEntryLabel = customtkinter.CTkLabel(master = self.rpmFrame, 
+					      							text= "Set RPM:", 
+													font= ('Arial', 18))
 		self.rpmEntryLabel.pack()
 
 		#rpm entry frame
-		self.rpmEntryFrame = customtkinter.CTkFrame(master = self.rpmFrame, fg_color= "transparent")
+		self.rpmEntryFrame = customtkinter.CTkFrame(master = self.rpmFrame, 
+					      							fg_color= "transparent")
 		self.rpmEntryFrame.pack()
 
 		#rpm -10 button
 		self.rpmDecButton = customtkinter.CTkButton(master = self.rpmEntryFrame, 
-								text= "-10",
-								font= ('Arial', plusMinTextSize, 'bold'),
-								command= self.decRpmEntry,
-								width= plusMinButtonWidth,
-								border_spacing= 4
-								#padx= 3,
-								#pady= 4
-								)
+													text= "-10",
+													font= ('Arial', plusMinTextSize, 'bold'),
+													command= self.decRpmEntry,
+													width= plusMinButtonWidth,
+													border_spacing= 4)
 		self.rpmDecButton.pack(side= LEFT, padx= 5)
 
 		#rpm entry box
 		self.rpmEntry = customtkinter.CTkEntry(master = self.rpmEntryFrame, 
-							font= ('Arial', 20), 
-							width= 80,
-							height= 30,
-							textvariable= self.rpmEntryText,
-							justify= CENTER)
+												font= ('Arial', 20), 
+												width= 80,
+												height= 30,
+												textvariable= self.rpmEntryText,
+												justify= CENTER)
 		self.rpmEntry.pack(side= LEFT)
 
 		#rpm +10 button
 		self.rpmIncButton = customtkinter.CTkButton(master = self.rpmEntryFrame, 
-								text= "+10",
-								font= ('Arial', plusMinTextSize, 'bold'),
-								command= self.incRpmEntry,
-								width= plusMinButtonWidth,
-								border_spacing= 4
-								#padx= 2,
-								#pady= 4
-								)
+													text= "+10",
+													font= ('Arial', plusMinTextSize, 'bold'),
+													command= self.incRpmEntry,
+													width= plusMinButtonWidth,
+													border_spacing= 4)
 		self.rpmIncButton.pack(side= LEFT, padx= 5)
 
 		#RPM set button
 		self.rpmSetButton = customtkinter.CTkButton(master = self.rpmFrame,
-			     				width= 190,
-							    height= 40,
-								text= "SET",
-								font= ('Arial', 18, 'bold'),
-								command= self.setRpm,
-								border_width= 2,
-								fg_color= 'green')
+													width= 190,
+													height= 40,
+													textvariable= self.rpmSetText,
+													font= ('Arial', 18, 'bold'),
+													command= self.setRpm,
+													border_width= 2,
+													fg_color= 'green')
 		self.rpmSetButton.pack(pady= 6)
 
 
 		#------Angle Control------#
 
-		self.angleFrame = customtkinter.CTkFrame(master = self.tabView.tab("Manual Control"), fg_color= "transparent")
+		self.angleFrame = customtkinter.CTkFrame(master = self.tabView.tab("Manual Control"), 
+					   								fg_color= "transparent")
 		self.angleFrame.pack(side= LEFT, fill= 'both', expand= True)
-		#self.angleFrame.pack(anchor= 'center', fill= 'both', padx= 30)
 
 		#angle control section label
-		self.angleLabel = customtkinter.CTkLabel(master = self.angleFrame, text= "ANGLE", font= ('Arial', 24, 'bold'), width= 7)
+		self.angleLabel = customtkinter.CTkLabel(master = self.angleFrame, 
+													text= "ANGLE", 
+													font= ('Arial', 24, 'bold'), 
+													width= 7)
 		self.angleLabel.pack(pady= 2)
 
 		#angle dial
 		self.angleDial = Meter(self.angleFrame, 
-							start= 0, 
-							end= 90, 
-							major_divisions= 15, 
-							minor_divisions= 5,
-							radius= 190,
-							border_width= 0,
-							start_angle= 0,
-							end_angle= 90,
-							text= " Degrees",
-							text_font= ('Arial', 14, 'bold')
-							)
+								start= 0, 
+								end= 90, 
+								major_divisions= 15, 
+								minor_divisions= 5,
+								radius= 190,
+								border_width= 0,
+								start_angle= 0,
+								end_angle= 90,
+								text= " Degrees",
+								text_font= ('Arial', 14, 'bold'))
 		self.angleDial.pack(pady= 4)
 		self.angleDial.set(self.angleDialVal)
 
 		#angle entry box label
-		self.angleEntryLabel = customtkinter.CTkLabel(master = self.angleFrame, text= "Set Angle:", font= ('Arial', 18))
+		self.angleEntryLabel = customtkinter.CTkLabel(master = self.angleFrame, 
+														text= "Set Angle:", 
+														font= ('Arial', 18))
 		self.angleEntryLabel.pack()
 
 		#angle entry frame
-		self.angleEntryFrame = customtkinter.CTkFrame(master = self.angleFrame, fg_color= "transparent")
+		self.angleEntryFrame = customtkinter.CTkFrame(master = self.angleFrame, 
+														fg_color= "transparent")
 		self.angleEntryFrame.pack()
 
 		#angle -15 button
 		self.angleDecButton = customtkinter.CTkButton(master = self.angleEntryFrame, 
-								text= "-15",
-								font= ('Arial', plusMinTextSize, 'bold'),
-								command= self.decAngleEntry,
-								width= plusMinButtonWidth,
-								border_spacing= 4
-								#padx= 3,
-								#pady= 4
-								)
+														text= "-15",
+														font= ('Arial', plusMinTextSize, 'bold'),
+														command= self.decAngleEntry,
+														width= plusMinButtonWidth,
+														border_spacing= 4)
 		self.angleDecButton.pack(side= LEFT, padx= 5)
 
 		#angle entry box
@@ -228,21 +232,16 @@ class GUIClass:
 								font= ('Arial', plusMinTextSize, 'bold'),
 								command= self.incAngleEntry,
 								width= plusMinButtonWidth,
-								border_spacing= 4
-								#padx= 2,
-								#pady= 4
-								)
+								border_spacing= 4)
 		self.angleIncButton.pack(side= LEFT, padx= 5)
 
 		#Angle set button
 		self.angleSetButton = customtkinter.CTkButton(master = self.angleFrame, 
 								width= 190,
 							    height= 40,
-								text= "SET",
+								textvariable= self.angleSetText,
 								font= ('Arial', 18, 'bold'),
 								command= self.setAngle,
-								#padx= 30,
-								#pady= 5,
 								border_width= 2,
 								fg_color= 'green')
 		self.angleSetButton.pack(pady= 6)
@@ -520,11 +519,6 @@ class GUIClass:
 
 		# endregion
 
-
-		#---------------------#
-		#------Main Loop------#
-		#---------------------#
-
 	
 
 	#---------------------#
@@ -534,9 +528,9 @@ class GUIClass:
 
 	# function to update selected rpm value
 	def setRpm(self):
-		self.rpmVal
-		self.rpmDialVal
-		self.rpmEntryText
+		#self.rpmVal
+		#self.rpmDialVal
+		#self.rpmEntryText
 
 		#try block to validate entry value
 		try:
@@ -551,9 +545,13 @@ class GUIClass:
 			else:
 				self.rpmVal = setInt
 				print("rpm set button clicked, entry rpm is " + str(setInt)
-						+ " rpmVal is " + str(self.rpmVal))
+							+ " rpmVal is " + str(self.rpmVal))
+					
+					#self.rpmDial.set(setInt) #for testing
 				
-				#self.rpmDial.set(setInt) #for testing
+				if(self.running):
+					data = str(self.rpmVal) + "," + str(self.angleVal) + ",1"
+					self.ser.write(data.encode())
 		
 		#if a decimal or non integer value is entered
 		except ValueError:
@@ -580,7 +578,11 @@ class GUIClass:
 				print("angle set button clicked, entry angle is " + str(setInt)
 						+ " self.angleVal is " + str(self.angleVal))
 
-				self.angleDial.set(setInt) #for testing
+				#self.angleDial.set(setInt) #for testing
+
+				if(self.running):
+					data = str(self.rpmVal) + "," + str(self.angleVal) + ",1"
+					self.ser.write(data.encode())
 		
 		#if a decimal or non integer value is entered
 		except ValueError:
@@ -591,9 +593,14 @@ class GUIClass:
 	def startPressed(self):
 		# send rpmVal and self.angleVal to arduino
 		print("Start Button pressed, rpmVal: " + str(self.rpmVal) + ", self.angleVal: " + str(self.angleVal))
+		self.rpmSetText.set("UPDATE")
+		self.angleSetText.set("UPDATE")
+		self.running = True
 
 		data = str(self.rpmVal) + "," + str(self.angleVal) + ",1"
 		self.ser.write(data.encode())
+
+		
 
 	# function to send stop command to arduino
 	def stopPressed(self):
@@ -601,13 +608,24 @@ class GUIClass:
 		self.angleVal
 		self.rpmVal = 0
 		self.angleVal = 0
+
 		print("Stop Button pressed, slowing down")
+
+		self.rpmSetText.set("SET")
+		self.angleSetText.set("SET")
+
+		self.running = False
+
 		data = str(self.rpmVal) + "," + str(self.angleVal) + ",2"
 		self.ser.write(data.encode())
 
 
+
+
 	# function to send e-stop command to arduino
 	def eStopPressed(self):
+
+		self.running = False
 		print("Emergency Stop Button pressed, shutting down all systems")
 		data = str(self.rpmVal) + "," + str(self.angleVal) + ",3"
 		self.ser.write(data.encode())
@@ -769,12 +787,16 @@ class GUIClass:
 
 #built in main for testing
 #"""
+
+
 window = customtkinter.CTk()
 customtkinter.set_appearance_mode("light")
 guiObj = GUIClass(window)
 window.geometry("800x400")
 #use threading to separate serial receiving and main loop
 window.mainloop()
+#add popup to calibrate actuator
+
 while True:
 	if guiObj.ser.in_waiting > 0:
 		received_data = guiObj.ser.readline().decode().strip()
