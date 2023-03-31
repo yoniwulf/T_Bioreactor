@@ -11,6 +11,7 @@ import openpyxl
 import serial
 import copy
 import threading
+import datetime
 
 
 SSEButtonHeight = 107
@@ -75,6 +76,9 @@ class GUIClass:
 		self.angleSetText = StringVar()
 		self.manRunning = False
 		self.autoRunning = False
+		self.startTime = None
+		self.timerLength = None
+		self.stopTime = None
 
 		#set StringVars
 		self.curProfRPMText.set("0")
@@ -579,6 +583,7 @@ class GUIClass:
 			self.rpmVal = self.curProfile.rpm
 			self.angleVal = self.curProfile.angle
 			#start timer
+			self.startTime = time.time()
 
 
 		# send self.rpmVal and self.angleVal to arduino
@@ -600,6 +605,7 @@ class GUIClass:
 		else:
 			print("Automatic Stop Button pressed, slowing down")
 			#pause timer
+			self.timerLength = self.timerLength + (self.startTime - time.time())
 
 		self.rpmVal = 0
 		self.angleVal = 0
@@ -624,6 +630,7 @@ class GUIClass:
 		else:
 			print("Automatic Emergency Stop Button pressed, shutting down all systems")
 			#pause timer
+			self.timerLength = self.timerLength + (self.startTime - time.time())
 
 		self.rpmVal = 0
 		self.angleVal = 0
@@ -773,6 +780,7 @@ class GUIClass:
 				self.curProfRPMText.set(self.curProfile.rpm)
 				self.curProfAngleText.set(self.curProfile.angle)
 				self.curProfTimeText.set(f"{self.curProfile.hour:02}:{self.curProfile.min:02}:{self.curProfile.sec:02}")
+				self.timerLength = self.curProfile.hour * 3600 + self.curProfile.min * 60 + self.curProfile.sec
 				self.curProfTimeLeftText.set(f"{self.curProfile.hour:02}:{self.curProfile.min:02}:{self.curProfile.sec:02}")
 				self.allProfListBox.selection_set(self.curProfIndex)
 
@@ -837,6 +845,8 @@ class GUIClass:
 			self.curProfAngleText.set(self.curProfile.angle)
 			self.curProfTimeText.set(f"{self.curProfile.hour:02}:{self.curProfile.min:02}:{self.curProfile.sec:02}")
 			self.curProfTimeLeftText.set(f"{self.curProfile.hour:02}:{self.curProfile.min:02}:{self.curProfile.sec:02}")
+			self.timerLength = self.curProfile.hour * 3600 + self.curProfile.min * 60 + self.curProfile.sec
+			self.startTime = time.time()
 			self.allProfListBox.see(self.curProfIndex)
 			self.allProfListBox.selection_clear(0, END)
 			self.allProfListBox.selection_set(self.curProfIndex)
@@ -852,6 +862,8 @@ class GUIClass:
 			self.curProfAngleText.set(self.curProfile.angle)
 			self.curProfTimeText.set(f"{self.curProfile.hour:02}:{self.curProfile.min:02}:{self.curProfile.sec:02}")
 			self.curProfTimeLeftText.set(f"{self.curProfile.hour:02}:{self.curProfile.min:02}:{self.curProfile.sec:02}")
+			self.timerLength = self.curProfile.hour * 3600 + self.curProfile.min * 60 + self.curProfile.sec
+			self.startTime = time.time()
 			self.allProfListBox.see(self.curProfIndex)
 			self.allProfListBox.selection_clear(0, END)
 			self.allProfListBox.selection_set(self.curProfIndex)
@@ -861,37 +873,84 @@ class GUIClass:
 	def restartProf(self):
 		if self.numProfs != 0:
 			self.curProfTimeLeftText.set(f"{self.curProfile.hour:02}:{self.curProfile.min:02}:{self.curProfile.sec:02}")
+			self.startTime = time.time()
 			#maybe need to send some signal to timer thread
 
 
 	# endregion
 
+	def updateTimer(self):
+		if not self.autoRunning:
+			return
+		
+		curTime = time.time()
+		if self.startTime + self.timerLength > curTime:
+			tempHrLeft = int(self.timerLength + (self.startTime - curTime)) // 3600
+			tempMinLeft = (int(self.timerLength + (self.startTime - curTime)) // 60) % 60
+			tempSecLeft = int(self.timerLength + (self.startTime - curTime)) % 60
+
+			self.curProfTimeLeftText.set(f"{tempHrLeft:02}:{tempMinLeft:02}:{tempSecLeft:02}")
+			return
+		
+		# Timer is done:
+		#self.curProfTimeLeftText.set(datetime.timedelta(0))
+		if self.curProfIndex < self.numProfs - 1:
+			self.nextProf()
+			return
+		
+		
+
+
+
 
 #built in main for testing
 #"""
+window = customtkinter.CTk()
+customtkinter.set_appearance_mode("light")
+guiObj = GUIClass(window)
+window.geometry("800x400")
 
+def task():
+	guiObj.updateTimer()
+	window.after(1000, task)
+
+window.after(1000, task)
+window.mainloop()
+
+#"""
+
+
+#use threading to separate serial receiving and main loop
+
+"""
 
 def runGUI():
-	window = customtkinter.CTk()
-	customtkinter.set_appearance_mode("light")
-	guiObj = GUIClass(window)
-	window.geometry("800x400")
-	#use threading to separate serial receiving and main loop
-	window.mainloop()
+	
 	#add popup to calibrate actuator
 
 def runTimer():
 	profTimer = ProfileTimer(0, 0, 0)
 
 
+def runFeedback():
+	while True:
+		if guiObj.ser.in_waiting > 0:
+			received_data = guiObj.ser.readline().decode().strip()
+			print("received from Arduino: "+ received_data)
+			break
+
+
 GUIThread = threading.Thread(target= runGUI, args=())
 GUIThread.start()
 
-timerThread = threading.Thread(target= runTimer, args=())
-timerThread.start()
+#timerThread = threading.Thread(target= runTimer, args=())
+#timerThread.start()
+
+#feedbackThread = threading.Thread(target= runFeedback, args=())
+#feedbackThread.start()
 
 
-"""
+
 while True:
 	if guiObj.ser.in_waiting > 0:
 		received_data = guiObj.ser.readline().decode().strip()
