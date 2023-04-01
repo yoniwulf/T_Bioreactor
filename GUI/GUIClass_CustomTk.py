@@ -42,7 +42,7 @@ class GUIClass:
 	#----------------------------#
 	#------Setup GUI Window------#
 	#----------------------------#
-	def __init__(self, master):
+	def __init__(self, master, serialCon):
 		self.master = master
 		customtkinter.set_appearance_mode("light")
 		master.title("T-BioReactor Controls")
@@ -91,12 +91,20 @@ class GUIClass:
 		self.angleSetText.set("SET")
 		
 		#open serial communication port
+
+		try:
+			self.ser = serialCon
+		
+		except:
+			print("no serial connection")
+			
+		"""
 		try:
 			self.ser = serial.Serial('/dev/ttyACM0', 9600, timeout = 1)
 		
 		except serial.serialutil.SerialException:
 			print("no serial connection")
-
+		"""
 
 		#------------------------------#
 		#------Manual Control Tab------#
@@ -577,13 +585,13 @@ class GUIClass:
 
 
 		else:
-			print("Automatic Start Button pressed, rpmVal: " + str(self.rpmVal) + ", self.angleVal: " + str(self.angleVal))
 			self.manRunning = False
 			self.autoRunning = True
 			self.rpmVal = self.curProfile.rpm
 			self.angleVal = self.curProfile.angle
 			#start timer
 			self.startTime = time.time()
+			print("Automatic Start Button pressed, rpmVal: " + str(self.rpmVal) + ", self.angleVal: " + str(self.angleVal))
 
 
 		# send self.rpmVal and self.angleVal to arduino
@@ -837,6 +845,11 @@ class GUIClass:
 
 	#function to select previous profile in listbox
 	def prevProf(self):
+		if self.curProfIndex == 0:
+			messagebox.showinfo(title= "First Profile", 
+		       					message= "This is the first profile in the set")
+			return
+			
 		if self.curProfIndex > 0 and self.numProfs != 0:
 			self.curProfIndex = self.curProfIndex - 1
 			print(self.curProfIndex)
@@ -851,9 +864,17 @@ class GUIClass:
 			self.allProfListBox.selection_clear(0, END)
 			self.allProfListBox.selection_set(self.curProfIndex)
 
+		if self.autoRunning:
+			self.startPressed(False)
+
 
 	#function to select next profile in listbox
 	def nextProf(self):
+		if self.curProfIndex == self.numProfs - 1:
+			messagebox.showinfo(title= "Last Profile", 
+		       					message= "This is the last profile in the set")
+			return
+
 		if self.curProfIndex < self.numProfs - 1 and self.numProfs != 0:
 			self.curProfIndex = self.curProfIndex + 1
 			print(self.curProfIndex)
@@ -868,6 +889,9 @@ class GUIClass:
 			self.allProfListBox.selection_clear(0, END)
 			self.allProfListBox.selection_set(self.curProfIndex)
 
+		if self.autoRunning:
+			self.startPressed(False)
+		
 
 	# function to restart the current profile
 	def restartProf(self):
@@ -875,9 +899,10 @@ class GUIClass:
 			self.curProfTimeLeftText.set(f"{self.curProfile.hour:02}:{self.curProfile.min:02}:{self.curProfile.sec:02}")
 			self.startTime = time.time()
 			#maybe need to send some signal to timer thread
+		
+		if self.autoRunning:
+			self.startPressed(False)
 
-
-	# endregion
 
 	def updateTimer(self):
 		if not self.autoRunning:
@@ -893,18 +918,62 @@ class GUIClass:
 			return
 		
 		# Timer is done:
-		#self.curProfTimeLeftText.set(datetime.timedelta(0))
+		if self.curProfIndex == self.numProfs - 1:
+			self.curProfTimeLeftText.set("00:00:00")
+			messagebox.showinfo(title= "Profile Set Complete", 
+		       					message= "All profiles have been completed")
+			self.stopPressed(False)
+			return
+
+
 		if self.curProfIndex < self.numProfs - 1:
 			self.nextProf()
 			return
 		
-		
+	# endregion
 
 
 
 
 #built in main for testing
+
 #"""
+#experimental threading main
+
+#open serial communication port
+try:
+	mainSer = serial.Serial('/dev/ttyACM0', 9600, timeout = 1)
+
+except serial.serialutil.SerialException:
+	print("no serial connection")
+
+def runFeedback():
+	while True:
+		if mainSer.in_waiting > 0:
+			received_data = mainSer.readline().decode().strip()
+			print("received from Arduino: "+ received_data)
+
+feedbackThread = threading.Thread(target= runFeedback, args=())
+feedbackThread.start()
+
+window = customtkinter.CTk()
+customtkinter.set_appearance_mode("light")
+guiObj = GUIClass(window, mainSer)
+window.geometry("800x400")
+
+def task():
+	guiObj.updateTimer()
+	window.after(1000, task)
+
+window.after(1000, task)
+window.mainloop()
+
+
+#"""
+
+"""
+# Working main
+
 window = customtkinter.CTk()
 customtkinter.set_appearance_mode("light")
 guiObj = GUIClass(window)
@@ -917,10 +986,9 @@ def task():
 window.after(1000, task)
 window.mainloop()
 
-#"""
+"""
 
 
-#use threading to separate serial receiving and main loop
 
 """
 
@@ -928,8 +996,6 @@ def runGUI():
 	
 	#add popup to calibrate actuator
 
-def runTimer():
-	profTimer = ProfileTimer(0, 0, 0)
 
 
 def runFeedback():
@@ -943,11 +1009,8 @@ def runFeedback():
 GUIThread = threading.Thread(target= runGUI, args=())
 GUIThread.start()
 
-#timerThread = threading.Thread(target= runTimer, args=())
-#timerThread.start()
-
-#feedbackThread = threading.Thread(target= runFeedback, args=())
-#feedbackThread.start()
+feedbackThread = threading.Thread(target= runFeedback, args=())
+feedbackThread.start()
 
 
 
@@ -957,80 +1020,12 @@ while True:
 		print("received from Arduino: "+ received_data)
 		break
 
+
 """
-
-
-#"""
 
 # region OLD CODE
 """
 
-#RPM scale
-rpmScale = Scale(manControlTab, 
-					from_= 200, 
-					to= 0,
-					length= 400,
-					width= 20,
-					orient= VERTICAL,
-					font= ('Arial', 16),
-					tickinterval = 20,
-					resolution= 10,
-					border= 5,
-					activebackground= 'red',
-					showvalue= 0)
-rpmScale.grid(row= 2, column= 0, rowspan= 3)
-
-#Angle scale
-angleScale = Scale(manControlTab, 
-					from_= 90, 
-					to= 0,
-					length= 400,
-					width= 20,
-					orient= VERTICAL,
-					font= ('Arial', 16),
-					tickinterval = 15,
-					resolution= 15,
-					border= 5,
-					activebackground= 'red',
-					showvalue= 0)
-angleScale.grid(row= 2, column= 1, rowspan= 3)
-
-
-
-self.curProfTextBox = Text(autoControlTab, height= 3, width= 50)
-self.curProfTextBox.insert(index= END, chars= "RPM = ... \nAngle = ... \n Time = ...")
-self.curProfTextBox.grid(row = 1, column= 0, rowspan= 3, columnspan= 6)
-self.curProfTextBox.configure(state='disabled')
-
-#create message for time and time remaining, pack (WIP)
-curProfTimeMes = Message(curProfFrame, 
-							text= "Time:            " + curProfTime + "\nRemaining:   " + curProfTimeRem, 
-							justify= 'left', 
-							font= ('Arial', 16),
-							width= 500)
-curProfTimeMes.pack()
-
-
-
-#create frame for all profiles, add to grid
-allProfFrame = Frame(autoControlTab)
-#allProfFrame.grid(row = 6, column= 0, rowspan= 3, columnspan= 2)
-
-
-
-
-allProfMes = Message(allProfFrame, 
-						text= self.profileList[0].printInfoText() + "\n\n" + self.profileList[1].printInfoText() + "\n\n" + self.profileList[2].printInfoText(),
-						justify= 'left',
-						font= ('Arial', 16),
-						width= 500)
-#allProfMes.pack()
-
-
-#create scroll bar for all profiles frame
-allProfScroll = Scrollbar(allProfFrame, orient= 'vertical')
-allProfScroll.pack(side= RIGHT, fill= Y)
-#allProfScroll.config(command= t.xview)  # add some text object 
 
 """
 # endregion
