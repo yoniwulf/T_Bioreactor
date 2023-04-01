@@ -951,7 +951,7 @@ def runFeedback():
 	while True:
 		if mainSer.in_waiting > 0:
 			received_data = mainSer.readline().decode().strip()
-			print("received from Arduino: "+ received_data)
+			print("received from Arduino: "+ received_data + "\n")
 
 feedbackThread = threading.Thread(target= runFeedback, args=())
 feedbackThread.start()
