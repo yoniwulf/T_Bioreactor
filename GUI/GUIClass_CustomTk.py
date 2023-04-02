@@ -94,7 +94,6 @@ class GUIClass:
 
 		try:
 			self.ser = serialCon
-		
 		except:
 			print("no serial connection")
 			
@@ -552,6 +551,12 @@ class GUIClass:
 														border_width= 2)
 		self.autoEStopButton.pack(pady= 4)
 
+		#calibrate linear actuator
+		messagebox.showwarning(title= "Calibrate Linear Actuator", 
+								message= "Linear Actuator will now calibrate")
+		data = "0,0,4"
+		self.ser.write(data.encode())
+
 		# endregion
 
 	
@@ -905,6 +910,10 @@ class GUIClass:
 
 
 	def updateTimer(self):
+		#if self.ser.in_waiting > 0:
+			#received_data = self.ser.readline().decode().strip()
+			#print("received from Arduino: "+ received_data + "\n")
+
 		if not self.autoRunning:
 			return
 		
