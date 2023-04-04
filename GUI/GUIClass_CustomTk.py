@@ -956,6 +956,10 @@ try:
 except serial.serialutil.SerialException:
 	print("no serial connection")
 
+
+
+
+"""
 def runFeedback():
 	while True:
 		if mainSer.in_waiting > 0:
@@ -964,7 +968,7 @@ def runFeedback():
 
 feedbackThread = threading.Thread(target= runFeedback, args=())
 feedbackThread.start()
-
+"""
 window = customtkinter.CTk()
 customtkinter.set_appearance_mode("light")
 guiObj = GUIClass(window, mainSer)
@@ -975,6 +979,24 @@ def task():
 	window.after(1000, task)
 
 window.after(1000, task)
+
+def receive_data():
+	while True:
+		try:
+			data = mainSer.readline().decode().strip()
+			RPMFeedback, angleFeedback = data.split(',')
+			RPMFeedback = int(RPMFeedback)
+			angleFeedback = int(angleFeedback)
+			print("Received RPM feedbacks:", RPMFeedback, angleFeedback)
+			guiObj.rpmDial.set(RPMFeedback)
+			guiObj.angleDial.set(angleFeedback)
+			#guiObj.rpmDialVal = RPMFeedback
+			#guiObj.angleDialVal = angleFeedback
+		except ValueError:
+			pass
+
+receive_thread = threading.Thread(target=receive_data)
+receive_thread.start()
 window.mainloop()
 
 
