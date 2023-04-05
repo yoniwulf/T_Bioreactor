@@ -42,7 +42,7 @@ class GUIClass:
 	#----------------------------#
 	#------Setup GUI Window------#
 	#----------------------------#
-	def __init__(self, master, serialCon):
+	def __init__(self, master):
 		self.master = master
 		customtkinter.set_appearance_mode("light")
 		master.title("T-BioReactor Controls")
@@ -93,7 +93,7 @@ class GUIClass:
 		#open serial communication port
 
 		try:
-			self.ser = serialCon
+			self.ser = serial.Serial('/dev/ttyACM0', 9600, timeout = 1)
 		except:
 			print("no serial connection")
 			
@@ -217,7 +217,8 @@ class GUIClass:
 								end_angle= 90,
 								text= " Degrees",
 								text_font= ('Arial', 14, 'bold'),
-								bg= "#DBDBDB")
+								bg= "#DBDBDB",
+								scroll= False)
 		self.angleDial.pack(pady= 4)
 		self.angleDial.set(self.angleDialVal)
 
@@ -440,7 +441,7 @@ class GUIClass:
 		self.curProfTimeLabel = customtkinter.CTkLabel(self.curProfTimeFrame, 
 														text= "Time:", 
 														font= ('Arial', curProfTextSize + 2, 'bold'), 
-														justify= 'left')
+														justify= 'left',)
 		self.curProfTimeLabel.pack(side= LEFT)
 
 		#current profile Time message
@@ -561,7 +562,7 @@ class GUIClass:
 		messagebox.showwarning(title= "Calibrate Linear Actuator", 
 								message= "Linear Actuator will now calibrate")
 		data = "0,0,4"
-		self.ser.write(data.encode())
+		#self.ser.write(data.encode())
 
 		# endregion
 
@@ -712,7 +713,7 @@ class GUIClass:
 				self.angleEntry.set('15')
 				self.angleVal = 15
 			
-			if setInt % 15 != 0:
+			elif setInt % 15 != 0:
 				messagebox.showwarning(title= "Angle increment error", message= "Angle must be in increments of 15")
 				self.angleEntry.set('15')
 				self.angleVal = 15
@@ -985,7 +986,7 @@ feedbackThread.start()
 """
 window = customtkinter.CTk()
 customtkinter.set_appearance_mode("light")
-guiObj = GUIClass(window, mainSer)
+guiObj = GUIClass(window)
 window.geometry("800x400")
 
 def task():
@@ -994,6 +995,7 @@ def task():
 
 window.after(1000, task)
 
+"""
 def receive_data():
 	while True:
 		try:
@@ -1011,6 +1013,7 @@ def receive_data():
 
 receive_thread = threading.Thread(target=receive_data)
 receive_thread.start()
+"""
 window.mainloop()
 
 
