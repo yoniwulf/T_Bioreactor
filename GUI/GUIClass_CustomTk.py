@@ -587,12 +587,14 @@ class GUIClass:
 					self.setAngle()
 				
 			
-			else:
-				print("Manual Start Button pressed, rpmVal: " + str(self.rpmVal) + ", self.angleVal: " + str(self.angleVal))
-				self.rpmSetText.set("UPDATE")
-				self.angleSetText.set("UPDATE")
-				self.manRunning = True
-				self.autoRunning = False
+			
+			print("Manual Start Button pressed, rpmVal: " + str(self.rpmVal) + ", self.angleVal: " + str(self.angleVal))
+			self.rpmEntryText.set(str(self.rpmVal))
+			self.angleEntryText.set(str(self.angleVal))
+			self.rpmSetText.set("UPDATE")
+			self.angleSetText.set("UPDATE")
+			self.manRunning = True
+			self.autoRunning = False
 
 
 		else:
@@ -699,6 +701,7 @@ class GUIClass:
 		except ValueError:
 			messagebox.showwarning(title= "Non-whole number RPM", message= "RPM must be a whole number")
 			self.rpmEntryText.set('0')
+			self.rpmVal = 0
 
 
 	# function to update selected angle value
@@ -709,12 +712,12 @@ class GUIClass:
 
 			if (setInt > 90) or (setInt < 15):
 				messagebox.showwarning(title= "Angle out of range", message= "Angle must be between 15 and 90")
-				self.angleEntry.set('15')
+				self.angleEntryText.set('15')
 				self.angleVal = 15
 			
-			if setInt % 15 != 0:
+			elif setInt % 15 != 0:
 				messagebox.showwarning(title= "Angle increment error", message= "Angle must be in increments of 15")
-				self.angleEntry.set('15')
+				self.angleEntryText.set('15')
 				self.angleVal = 15
 
 			else:
@@ -736,6 +739,7 @@ class GUIClass:
 		except ValueError:
 			messagebox.showwarning(title= "Non-whole number Angle", message= "Angle must be a whole number")
 			self.angleEntryText.set('15')
+			self.angleVal = 15
 
 
 	# function to import data from excel sheet
