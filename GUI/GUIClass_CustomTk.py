@@ -19,7 +19,7 @@ SSEButtonTextSize = 24
 plusMinButtonWidth = 50
 plusMinTextSize = 18
 curProfTextSize = 20
-TestMode = True
+LocalTest = True
 
 # region NOTES/IDEAS
 """ 
@@ -92,7 +92,7 @@ class GUIClass:
 		
 		#open serial communication port
 
-		if TestMode:
+		if LocalTest:
 			try:
 				self.ser = serial.Serial('/dev/ttyACM0', 9600, timeout = 1)
 		
@@ -563,7 +563,7 @@ class GUIClass:
 								message= "Linear Actuator will now calibrate")
 		data = "0,0,4"
 
-		if TestMode:
+		if LocalTest:
 			doNothing = True
 	
 		else:
@@ -968,8 +968,8 @@ class GUIClass:
 
 
 #built in main for testing
-
-def receive_data():
+#function to continuously receive and parse feedback data from Arduino
+def getFeedback():
 	while True:
 		try:
 			data = mainSer.readline().decode().strip()
@@ -1004,8 +1004,9 @@ guiObj = GUIClass(window, mainSer)
 window.geometry("800x400")
 window.after(1000, task)
 
-if not TestMode:
-	receive_thread = threading.Thread(target=receive_data)
+#if not using LocalTest, thread feedback
+if not LocalTest:
+	receive_thread = threading.Thread(target=getFeedback)
 	receive_thread.start()
 
 window.mainloop()
