@@ -10,7 +10,6 @@ import openpyxl
 import serial
 import copy
 import threading
-#import datetime
 import time
 
 
@@ -20,6 +19,7 @@ SSEButtonTextSize = 24
 plusMinButtonWidth = 50
 plusMinTextSize = 18
 curProfTextSize = 20
+TestMode = True
 
 # region NOTES/IDEAS
 """ 
@@ -92,18 +92,18 @@ class GUIClass:
 		
 		#open serial communication port
 
-		try:
-			self.ser = serialCon
-		except:
-			print("no serial connection")
-			
-		"""
-		try:
-			self.ser = serial.Serial('/dev/ttyACM0', 9600, timeout = 1)
+		if TestMode:
+			try:
+				self.ser = serial.Serial('/dev/ttyACM0', 9600, timeout = 1)
 		
-		except serial.serialutil.SerialException:
-			print("no serial connection")
-		"""
+			except serial.serialutil.SerialException:
+				print("no serial connection")
+		
+		else:
+			try:
+				self.ser = serialCon
+			except:
+				print("no serial connection")
 
 		#------------------------------#
 		#------Manual Control Tab------#
@@ -217,7 +217,8 @@ class GUIClass:
 								end_angle= 90,
 								text= " Degrees",
 								text_font= ('Arial', 14, 'bold'),
-								bg= "#DBDBDB")
+								bg= "#DBDBDB",
+								scroll= False)
 		self.angleDial.pack(pady= 4)
 		self.angleDial.set(self.angleDialVal)
 
@@ -561,7 +562,12 @@ class GUIClass:
 		messagebox.showwarning(title= "Calibrate Linear Actuator", 
 								message= "Linear Actuator will now calibrate")
 		data = "0,0,4"
-		self.ser.write(data.encode())
+
+		if TestMode:
+			doNothing = True
+	
+		else:
+			self.ser.write(data.encode())
 
 		# endregion
 
@@ -816,7 +822,10 @@ class GUIClass:
 				self.allProfListBox.selection_set(self.curProfIndex)
 
 		except FileNotFoundError:
+			#TODO change to warning
 			donothing = True
+		
+		#TODO clear datafile?
 
 
 	# function to clear all profiles from the profile list box
@@ -927,11 +936,8 @@ class GUIClass:
 			self.startPressed(False)
 
 
+	# function to update the timer
 	def updateTimer(self):
-		#if self.ser.in_waiting > 0:
-			#received_data = self.ser.readline().decode().strip()
-			#print("received from Arduino: "+ received_data + "\n")
-
 		if not self.autoRunning:
 			return
 		
@@ -961,42 +967,7 @@ class GUIClass:
 
 
 
-
 #built in main for testing
-
-#"""
-#experimental threading main
-
-#open serial communication port
-try:
-	mainSer = serial.Serial('/dev/ttyACM0', 9600, timeout = 1)
-
-except serial.serialutil.SerialException:
-	print("no serial connection")
-
-
-
-
-"""
-def runFeedback():
-	while True:
-		if mainSer.in_waiting > 0:
-			received_data = mainSer.readline().decode().strip()
-			print("received from Arduino: "+ received_data + "\n")
-
-feedbackThread = threading.Thread(target= runFeedback, args=())
-feedbackThread.start()
-"""
-window = customtkinter.CTk()
-customtkinter.set_appearance_mode("light")
-guiObj = GUIClass(window, mainSer)
-window.geometry("800x400")
-
-def task():
-	guiObj.updateTimer()
-	window.after(1000, task)
-
-window.after(1000, task)
 
 def receive_data():
 	while True:
@@ -1013,13 +984,33 @@ def receive_data():
 		except ValueError:
 			pass
 
-receive_thread = threading.Thread(target=receive_data)
-receive_thread.start()
+def task():
+	guiObj.updateTimer()
+	window.after(1000, task)
+
+
+#open serial communication port
+try:
+	mainSer = serial.Serial('/dev/ttyACM0', 9600, timeout = 1)
+
+except serial.serialutil.SerialException:
+	print("no serial connection")
+	mainSer = NONE
+
+
+window = customtkinter.CTk()
+customtkinter.set_appearance_mode("light")
+guiObj = GUIClass(window, mainSer)
+window.geometry("800x400")
+window.after(1000, task)
+
+if not TestMode:
+	receive_thread = threading.Thread(target=receive_data)
+	receive_thread.start()
+
 window.mainloop()
 
-
-#"""
-
+# region OLD CODE
 """
 # Working main
 
@@ -1034,12 +1025,6 @@ def task():
 
 window.after(1000, task)
 window.mainloop()
-
-"""
-
-
-
-"""
 
 def runGUI():
 	
@@ -1068,12 +1053,6 @@ while True:
 		received_data = guiObj.ser.readline().decode().strip()
 		print("received from Arduino: "+ received_data)
 		break
-
-
-"""
-
-# region OLD CODE
-"""
 
 
 """

@@ -10,7 +10,6 @@ import openpyxl
 import serial
 import copy
 import threading
-#import datetime
 import time
 
 
@@ -574,8 +573,6 @@ class GUIClass:
 
 	# region FUNCTIONS
 
-
-
 	# function to send rpmVal, self.angleVal, and start command to arduino
 	def startPressed(self, man):
 		if man:
@@ -816,7 +813,10 @@ class GUIClass:
 				self.allProfListBox.selection_set(self.curProfIndex)
 
 		except FileNotFoundError:
+			#TODO change to warning
 			donothing = True
+		
+		#TODO clear datafile?
 
 
 	# function to clear all profiles from the profile list box
@@ -895,7 +895,7 @@ class GUIClass:
 	def nextProf(self):
 		if self.curProfIndex == self.numProfs - 1:
 			messagebox.showinfo(title= "Last Profile", 
-		       					message= "This is the last profile in the set")
+								message= "This is the last profile in the set")
 			return
 
 		if self.curProfIndex < self.numProfs - 1 and self.numProfs != 0:
@@ -927,10 +927,8 @@ class GUIClass:
 			self.startPressed(False)
 
 
+	# function to update the timer
 	def updateTimer(self):
-		#if self.ser.in_waiting > 0:
-			#received_data = self.ser.readline().decode().strip()
-			#print("received from Arduino: "+ received_data + "\n")
 
 		if not self.autoRunning:
 			return
@@ -964,9 +962,6 @@ class GUIClass:
 
 #built in main for testing
 
-#"""
-#experimental threading main
-
 #open serial communication port
 try:
 	mainSer = serial.Serial('/dev/ttyACM0', 9600, timeout = 1)
@@ -977,28 +972,22 @@ except serial.serialutil.SerialException:
 
 
 
-"""
-def runFeedback():
-	while True:
-		if mainSer.in_waiting > 0:
-			received_data = mainSer.readline().decode().strip()
-			print("received from Arduino: "+ received_data + "\n")
 
-feedbackThread = threading.Thread(target= runFeedback, args=())
-feedbackThread.start()
-"""
+def timerTask():
+	guiObj.updateTimer()
+	window.after(1000, timerTask)
+
 window = customtkinter.CTk()
 customtkinter.set_appearance_mode("light")
 guiObj = GUIClass(window)
+#guiObj = GUIClass(window, mainSer)
 window.geometry("800x400")
+window.after(1000, timerTask)
 
-def task():
-	guiObj.updateTimer()
-	window.after(1000, task)
+window.mainloop()
 
-window.after(1000, task)
-
-"""
+#comment out for test
+""" 
 def receive_data():
 	while True:
 		try:
@@ -1016,32 +1005,18 @@ def receive_data():
 
 receive_thread = threading.Thread(target=receive_data)
 receive_thread.start()
-"""
-window.mainloop()
-
-
-#"""
-
-"""
-# Working main
-
-window = customtkinter.CTk()
-customtkinter.set_appearance_mode("light")
-guiObj = GUIClass(window)
-window.geometry("800x400")
-
-def task():
-	guiObj.updateTimer()
-	window.after(1000, task)
-
-window.after(1000, task)
-window.mainloop()
-
+""" #comment out for test
+# region OLD CODE
 """
 
+def runFeedback():
+	while True:
+		if mainSer.in_waiting > 0:
+			received_data = mainSer.readline().decode().strip()
+			print("received from Arduino: "+ received_data + "\n")
 
-
-"""
+feedbackThread = threading.Thread(target= runFeedback, args=())
+feedbackThread.start()
 
 def runGUI():
 	
@@ -1072,11 +1047,20 @@ while True:
 		break
 
 
-"""
 
-# region OLD CODE
-"""
+# Working main
 
+window = customtkinter.CTk()
+customtkinter.set_appearance_mode("light")
+guiObj = GUIClass(window)
+window.geometry("800x400")
+
+def timerTask():
+	guiObj.updateTimer()
+	window.after(1000, timerTask)
+
+window.after(1000, timerTask)
+window.mainloop()
 
 """
 # endregion
