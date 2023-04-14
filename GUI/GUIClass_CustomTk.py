@@ -69,7 +69,7 @@ class GUIClass:
 		self.curProfTimeLeftText = StringVar()
 		self.rpmEntryText = StringVar() #stringVar for rpm displayed in self.rpmEntry widget
 		self.angleEntryText = StringVar() #stringVar for angle displayed in self.angleEntry widget
-		self.rpmDialVal = 50 #actual rpm value (can be set for testing)
+		self.rpmDialVal = 0 #actual rpm value (can be set for testing)
 		self.angleDialVal = 15 #actual angle value (can be set for testing)
 		self.curProfile = MixProfile(0,0,0,0,0)
 		self.rpmSetText = StringVar()
@@ -602,6 +602,8 @@ class GUIClass:
 			self.manRunning = True
 			self.autoRunning = False
 
+			self.rpmDial.set(self.rpmVal) #for testing
+
 
 		else:
 			self.manRunning = False
@@ -693,9 +695,10 @@ class GUIClass:
 				print("rpm set button clicked, entry rpm is " + str(setInt)
 							+ " rpmVal is " + str(self.rpmVal))
 					
-					#self.rpmDial.set(setInt) #for testing
+				
 				
 				if(self.manRunning):
+					self.rpmDial.set(setInt) #for testing
 					try:
 						data = str(self.rpmVal) + "," + str(self.angleVal) + ",1"
 						self.ser.write(data.encode())
@@ -830,6 +833,7 @@ class GUIClass:
 
 	# function to clear all profiles from the profile list box
 	def clearAllPressed(self):
+		self.stopPressed(False)
 		self.profileList.clear()
 		self.allProfListBox.delete(0, END)
 		self.numProfs = 0
@@ -977,10 +981,8 @@ def getFeedback():
 			RPMFeedback = int(RPMFeedback)
 			angleFeedback = int(angleFeedback)
 			print("Received RPM feedbacks:", RPMFeedback, angleFeedback)
-			guiObj.rpmDial.set(RPMFeedback)
+			#guiObj.rpmDial.set(RPMFeedback)
 			guiObj.angleDial.set(angleFeedback)
-			#guiObj.rpmDialVal = RPMFeedback
-			#guiObj.angleDialVal = angleFeedback
 		except ValueError:
 			pass
 
