@@ -1,3 +1,10 @@
+"""
+Title: GUIClass_CustomTK.py
+Author: Jonathan Wulf
+Description: This file contains the GUIClass definition and code. This class is responsable for setting up a GUI window to provide control of the T-bioreactor.
+"""
+
+# Imports
 from tkinter import*
 from tkinter import ttk
 from tkinter import filedialog
@@ -12,7 +19,7 @@ import copy
 import threading
 import time
 
-
+# Constants 
 SSEButtonHeight = 107
 SSEButtonWidth = 107
 SSEButtonTextSize = 24
@@ -23,19 +30,8 @@ LocalTest = False
 
 # region NOTES/IDEAS
 """ 
-Ideas:
-* set buttons change variables (global?) of rpm and angle
-* once user presses start, new values will be sent to arduino
-* change set buttons to different color when user has changed value
-	* user must click set to update value
-* change start button to "update" when new values for rpm or angle are set
 
-* first round, set, set, start
-* while running, set buttons turn to update, clicking them will change the angle/rpm w/o pressing start
-
-
-cancel import
- """
+"""
 # endregion
 
 class GUIClass:
@@ -43,39 +39,46 @@ class GUIClass:
 	#------Setup GUI Window------#
 	#----------------------------#
 	def __init__(self, master, serialCon):
+		# setup class basics
 		self.master = master
 		customtkinter.set_appearance_mode("light")
 		master.title("T-BioReactor Controls")
 
-		# declare notebook to allow different tabs
+		# declare tabView to allow different tabs
 		self.tabView = customtkinter.CTkTabview(self.master, width=780)
 
-		#declare manual and automatic control tabs, add to notebook and grid
+		#declare manual and automatic control tabs, add to tabView
 		self.manControlTab = customtkinter.CTkFrame(self.tabView)
 		self.autoControlTab = customtkinter.CTkFrame(self.tabView)
 		self.tabView.add("Manual Control")
 		self.tabView.add("Automatic Control")
 		self.tabView.pack(expand= TRUE)
 
-		#declare variables
+		# general variables
 		self.rpmVal = 0 #set rpm value
 		self.angleVal = 15 #set angle value
-		self.profileList = [] #list for mixing profiles
-		self.curProfIndex = 0 #index of current mixing profile
-		self.numProfs = 0 #number of profiles
-		self.curProfRPMText = StringVar()
-		self.curProfAngleText = StringVar()
-		self.curProfTimeText = StringVar()
-		self.curProfTimeLeftText = StringVar()
+
+		# manual control variables
 		self.rpmEntryText = StringVar() #stringVar for rpm displayed in self.rpmEntry widget
 		self.angleEntryText = StringVar() #stringVar for angle displayed in self.angleEntry widget
 		self.rpmDialVal = 0 #actual rpm value (can be set for testing)
 		self.angleDialVal = 15 #actual angle value (can be set for testing)
-		self.curProfile = MixProfile(0,0,0,0,0)
-		self.rpmSetText = StringVar()
-		self.angleSetText = StringVar()
+		self.rpmSetText = StringVar() #stringVar for text in rpm "SET" button
+		self.angleSetText = StringVar() #stringVar for text in angle "SET" button
 		self.manRunning = False
+
+		# automatic control variables
+		self.profileList = [] #list for mixing profiles
+		self.curProfIndex = 0 #index of current mixing profile
+		self.numProfs = 0 #number of profiles
+		self.curProfRPMText = StringVar() #stringVar for current profile rpm
+		self.curProfAngleText = StringVar() #stringVar for current profile angle
+		self.curProfTimeText = StringVar() #stringVar for current profile total time
+		self.curProfTimeLeftText = StringVar() #stringVar for current profile time left
+		self.curProfile = MixProfile(0,0,0,0,0)
 		self.autoRunning = False
+
+		# timer variables
 		self.startTime = None
 		self.timerLength = None
 		self.stopTime = None
@@ -91,7 +94,6 @@ class GUIClass:
 		self.angleSetText.set("SET")
 		
 		#open serial communication port
-
 		if LocalTest:
 			try:
 				self.ser = serial.Serial('/dev/ttyACM0', 9600, timeout = 1)
@@ -104,6 +106,7 @@ class GUIClass:
 				self.ser = serialCon
 			except:
 				print("no serial connection")
+
 
 		#------------------------------#
 		#------Manual Control Tab------#
@@ -513,8 +516,6 @@ class GUIClass:
 		self.restartProfButton.pack(pady= 3)
 
 
-
-
 		#------Start/Stop Control------#
 
 		self.autoStartStopFrame = customtkinter.CTkFrame(self.tabView.tab("Automatic Control"),
@@ -558,6 +559,15 @@ class GUIClass:
 														border_width= 2)
 		self.autoEStopButton.pack(pady= 4)
 
+
+		# endregion
+
+		#----------------------------------#
+		#------Window Startup Actions------#
+		#----------------------------------#
+
+		# region WINDOW STARTUP ACTIONS
+
 		#calibrate linear actuator
 		messagebox.showwarning(title= "Calibrate Linear Actuator", 
 								message= "Linear Actuator will now calibrate")
@@ -568,23 +578,25 @@ class GUIClass:
 	
 		else:
 			self.ser.write(data.encode())
-
-		# endregion
-
+		
+		#endregion
 	
 
-	#---------------------#
-	#------Functions------#
-	#---------------------#
+		#---------------------#
+		#------Functions------#
+		#---------------------#
 
-	# region FUNCTIONS
+		# region FUNCTIONS
+
+		#TODO organize functions in groups
 
 
 
 	# function to send rpmVal, self.angleVal, and start command to arduino
 	def startPressed(self, man):
+		# if in the manual control mode
 		if man:
-			#check if the rpm and angle have been set
+			# check if the rpm and angle have been set
 			if int(self.rpmEntry.get()) != self.rpmVal or int(self.angleEntry.get()) != self.angleVal:
 				result = messagebox.askquestion(title= "Values Not Set", 
 			   									message= "Set button was not pressed \nclick Yes to set current RPM and Angle values \nclick No to use old values")
@@ -593,26 +605,25 @@ class GUIClass:
 					self.setAngle()
 				
 			
-			
-			print("Manual Start Button pressed, rpmVal: " + str(self.rpmVal) + ", self.angleVal: " + str(self.angleVal))
+			# set variable values and update text in set buttons
 			self.rpmEntryText.set(str(self.rpmVal))
 			self.angleEntryText.set(str(self.angleVal))
 			self.rpmSetText.set("UPDATE")
 			self.angleSetText.set("UPDATE")
 			self.manRunning = True
 			self.autoRunning = False
+			self.rpmDial.set(self.rpmVal)
+			#print("Manual Start Button pressed, rpmVal: " + str(self.rpmVal) + ", self.angleVal: " + str(self.angleVal))
 
-			self.rpmDial.set(self.rpmVal) #for testing
-
-
+		# if in the automatic control mode
 		else:
+			# set variable values and start timer
 			self.manRunning = False
 			self.autoRunning = True
 			self.rpmVal = self.curProfile.rpm
 			self.angleVal = self.curProfile.angle
-			#start timer
 			self.startTime = time.time()
-			print("Automatic Start Button pressed, rpmVal: " + str(self.rpmVal) + ", self.angleVal: " + str(self.angleVal))
+			#print("Automatic Start Button pressed, rpmVal: " + str(self.rpmVal) + ", self.angleVal: " + str(self.angleVal))
 
 
 		# send self.rpmVal and self.angleVal to arduino
@@ -622,7 +633,8 @@ class GUIClass:
 		
 		except AttributeError:
 			print("no serial connection")
-		
+
+#TODO clean up code under here	
 
 	# function to send stop command to arduino
 	def stopPressed(self, man):
@@ -968,7 +980,7 @@ class GUIClass:
 			self.nextProf()
 			return
 		
-	# endregion
+		# endregion
 
 
 
@@ -991,6 +1003,10 @@ def task():
 	guiObj.updateTimer()
 	window.after(1000, task)
 
+def windowClose():
+	guiObj.stopPressed()
+	window.destroy()
+
 
 #open serial communication port
 try:
@@ -1001,8 +1017,11 @@ except serial.serialutil.SerialException:
 	mainSer = NONE
 
 
+
 window = customtkinter.CTk()
 customtkinter.set_appearance_mode("light")
+window.protocol("WM_DELETE_WINDOW", windowClose)
+
 guiObj = GUIClass(window, mainSer)
 window.geometry("800x400")
 window.after(1000, task)
@@ -1012,6 +1031,9 @@ if not LocalTest:
 	receive_thread = threading.Thread(target=getFeedback)
 	receive_thread.start()
 
+
+
+#start main loop of window (open GUI)
 window.mainloop()
 
 # region OLD CODE
