@@ -19,7 +19,7 @@ SSEButtonTextSize = 24
 plusMinButtonWidth = 50
 plusMinTextSize = 18
 curProfTextSize = 20
-LocalTest = True
+LocalTest = False
 
 # region NOTES/IDEAS
 """ 
@@ -630,6 +630,7 @@ class GUIClass:
 			print("Manual Stop Button pressed, slowing down")
 			self.rpmSetText.set("SET")
 			self.angleSetText.set("SET")
+			self.rpmDial.set(self.rpmVal)
 
 		else:
 			print("Automatic Stop Button pressed, slowing down")
