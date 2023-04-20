@@ -26,7 +26,7 @@ SSEButtonTextSize = 24
 plusMinButtonWidth = 50
 plusMinTextSize = 18
 curProfTextSize = 20
-LocalTest = False
+LocalTest = True
 
 # region NOTES/IDEAS
 """ 
@@ -588,10 +588,8 @@ class GUIClass:
 
 		# region FUNCTIONS
 
-		#TODO organize functions in groups
-
-
-
+	#--- General Functions ---#
+	
 	# function to send rpmVal, self.angleVal, and start command to arduino
 	def startPressed(self, man):
 		# if in the manual control mode
@@ -599,10 +597,13 @@ class GUIClass:
 			# check if the rpm and angle have been set
 			if int(self.rpmEntry.get()) != self.rpmVal or int(self.angleEntry.get()) != self.angleVal:
 				result = messagebox.askquestion(title= "Values Not Set", 
-			   									message= "Set button was not pressed \nclick Yes to set current RPM and Angle values \nclick No to use old values")
+			   									message= "Set button was not pressed \nclick Yes to set current RPM and Angle values \nclick No to cancel")
 				if result == 'yes':
 					self.setRpm()
 					self.setAngle()
+				
+				elif result == 'no':
+					return
 				
 			
 			# set variable values and update text in set buttons
@@ -613,7 +614,7 @@ class GUIClass:
 			self.manRunning = True
 			self.autoRunning = False
 			self.rpmDial.set(self.rpmVal)
-			#print("Manual Start Button pressed, rpmVal: " + str(self.rpmVal) + ", self.angleVal: " + str(self.angleVal))
+			print("Manual Start Button pressed, rpmVal: " + str(self.rpmVal) + ", self.angleVal: " + str(self.angleVal))
 
 		# if in the automatic control mode
 		else:
@@ -623,7 +624,7 @@ class GUIClass:
 			self.rpmVal = self.curProfile.rpm
 			self.angleVal = self.curProfile.angle
 			self.startTime = time.time()
-			#print("Automatic Start Button pressed, rpmVal: " + str(self.rpmVal) + ", self.angleVal: " + str(self.angleVal))
+			print("Automatic Start Button pressed, rpmVal: " + str(self.rpmVal) + ", self.angleVal: " + str(self.angleVal))
 
 
 		# send self.rpmVal and self.angleVal to arduino
@@ -634,26 +635,28 @@ class GUIClass:
 		except AttributeError:
 			print("no serial connection")
 
-#TODO clean up code under here	
 
 	# function to send stop command to arduino
 	def stopPressed(self, man):
+		# if in the manual control mode, update text in set buttons
 		if man:
-			print("Manual Stop Button pressed, slowing down")
 			self.rpmSetText.set("SET")
 			self.angleSetText.set("SET")
-			self.rpmDial.set(self.rpmVal)
-
+			print("Manual Stop Button pressed, slowing down")
+		
+		# if in the automatic control mode, pause the timer
 		else:
-			print("Automatic Stop Button pressed, slowing down")
-			#pause timer
 			self.timerLength = self.timerLength + (self.startTime - time.time())
+			print("Automatic Stop Button pressed, slowing down")
 
+		# set variable values and RPM dial value
 		self.rpmVal = 0
 		self.angleVal = 0
+		self.rpmDial.set(self.rpmVal)
 		self.manRunning = False
 		self.autoRunning = False
 
+		# send self.rpmVal and self.angleVal to arduino
 		try:
 			data = str(self.rpmVal) + "," + str(self.angleVal) + ",2"
 			self.ser.write(data.encode())
@@ -661,6 +664,7 @@ class GUIClass:
 		except AttributeError:
 			print("no serial connection")
 
+#TODO clean up code under here	
 
 	# function to send e-stop command to arduino
 	def eStopPressed(self, man):
@@ -685,6 +689,72 @@ class GUIClass:
 		
 		except AttributeError:
 			print("no serial connection")
+
+	
+	# function to update the timer
+	def updateTimer(self):
+		if not self.autoRunning:
+			return
+		
+		curTime = time.time()
+		if self.startTime + self.timerLength > curTime:
+			tempHrLeft = int(self.timerLength + (self.startTime - curTime)) // 3600
+			tempMinLeft = (int(self.timerLength + (self.startTime - curTime)) // 60) % 60
+			tempSecLeft = int(self.timerLength + (self.startTime - curTime)) % 60
+
+			self.curProfTimeLeftText.set(f"{tempHrLeft:02}:{tempMinLeft:02}:{tempSecLeft:02}")
+			return
+		
+		# Timer is done:
+		if self.curProfIndex == self.numProfs - 1:
+			self.curProfTimeLeftText.set("00:00:00")
+			self.stopPressed(False)
+			messagebox.showinfo(title= "Profile Set Complete", 
+		       					message= "All profiles have been completed")
+			return
+
+
+		if self.curProfIndex < self.numProfs - 1:
+			self.nextProf()
+			return
+
+
+	#--- Manual Control Mode Functions ---#
+
+	# function to increment value displayed in rpm entry box
+	def incRpmEntry(self):
+		if (int(self.rpmEntryText.get()) + 10) > 200:
+			self.rpmEntryText.set('200')
+			
+		else:
+			self.rpmEntryText.set(str(int(self.rpmEntry.get()) + 10))
+
+
+	# function to decrement value displayed in rpm entry box
+	def decRpmEntry(self):
+		if (int(self.rpmEntryText.get()) - 10) < 0:
+			self.rpmEntryText.set('0')
+		
+		else:
+			self.rpmEntryText.set(str(int(self.rpmEntry.get()) - 10))
+
+
+	# function to increment value displayed in rpm entry box
+	def incAngleEntry(self):
+		if (int(self.angleEntryText.get()) + 15) > 90:
+			self.angleEntryText.set('90')
+		
+		else:
+			self.angleEntryText.set(str(int(self.angleEntry.get()) + 15))
+
+
+	# function to decrement value displayed in rpm entry box
+	def decAngleEntry(self):
+		if (int(self.angleEntryText.get()) - 15) < 15:
+			self.angleEntryText.set('15')
+		
+		else:
+			self.angleEntryText.set(str(int(self.angleEntry.get()) - 15))
 
 
 	# function to update selected rpm value
@@ -763,6 +833,8 @@ class GUIClass:
 			self.angleEntryText.set('15')
 			self.angleVal = 15
 
+
+	#--- Automatic Control Mode Functions ---#
 
 	# function to import data from excel sheet
 	def importPressed(self):
@@ -854,43 +926,7 @@ class GUIClass:
 		self.curProfAngleText.set("0")
 		self.curProfTimeText.set("00:00:00")
 		self.curProfTimeLeftText.set("00:00:00")
-
-
-	# function to increment value displayed in rpm entry box
-	def incRpmEntry(self):
-		if (int(self.rpmEntryText.get()) + 10) > 200:
-			self.rpmEntryText.set('200')
-			
-		else:
-			self.rpmEntryText.set(str(int(self.rpmEntry.get()) + 10))
-
-
-	# function to decrement value displayed in rpm entry box
-	def decRpmEntry(self):
-		if (int(self.rpmEntryText.get()) - 10) < 0:
-			self.rpmEntryText.set('0')
-		
-		else:
-			self.rpmEntryText.set(str(int(self.rpmEntry.get()) - 10))
-
-
-	# function to increment value displayed in rpm entry box
-	def incAngleEntry(self):
-		if (int(self.angleEntryText.get()) + 15) > 90:
-			self.angleEntryText.set('90')
-		
-		else:
-			self.angleEntryText.set(str(int(self.angleEntry.get()) + 15))
-
-
-	# function to decrement value displayed in rpm entry box
-	def decAngleEntry(self):
-		if (int(self.angleEntryText.get()) - 15) < 15:
-			self.angleEntryText.set('15')
-		
-		else:
-			self.angleEntryText.set(str(int(self.angleEntry.get()) - 15))
-
+	
 
 	#function to select previous profile in listbox
 	def prevProf(self):
@@ -952,34 +988,6 @@ class GUIClass:
 		if self.autoRunning:
 			self.startPressed(False)
 
-
-	# function to update the timer
-	def updateTimer(self):
-		if not self.autoRunning:
-			return
-		
-		curTime = time.time()
-		if self.startTime + self.timerLength > curTime:
-			tempHrLeft = int(self.timerLength + (self.startTime - curTime)) // 3600
-			tempMinLeft = (int(self.timerLength + (self.startTime - curTime)) // 60) % 60
-			tempSecLeft = int(self.timerLength + (self.startTime - curTime)) % 60
-
-			self.curProfTimeLeftText.set(f"{tempHrLeft:02}:{tempMinLeft:02}:{tempSecLeft:02}")
-			return
-		
-		# Timer is done:
-		if self.curProfIndex == self.numProfs - 1:
-			self.curProfTimeLeftText.set("00:00:00")
-			self.stopPressed(False)
-			messagebox.showinfo(title= "Profile Set Complete", 
-		       					message= "All profiles have been completed")
-			return
-
-
-		if self.curProfIndex < self.numProfs - 1:
-			self.nextProf()
-			return
-		
 		# endregion
 
 
@@ -999,12 +1007,14 @@ def getFeedback():
 		except ValueError:
 			pass
 
+
 def task():
 	guiObj.updateTimer()
 	window.after(1000, task)
 
+
 def windowClose():
-	guiObj.stopPressed()
+	guiObj.stopPressed(True)
 	window.destroy()
 
 
