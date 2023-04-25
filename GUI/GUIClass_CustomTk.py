@@ -623,6 +623,7 @@ class GUIClass:
 			self.autoRunning = True
 			self.rpmVal = self.curProfile.rpm
 			self.angleVal = self.curProfile.angle
+			self.rpmDial.set(self.curProfile.rpm)
 			self.startTime = time.time()
 			print("Automatic Start Button pressed, rpmVal: " + str(self.rpmVal) + ", self.angleVal: " + str(self.angleVal))
 
