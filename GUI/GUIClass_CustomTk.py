@@ -664,26 +664,30 @@ class GUIClass:
 		
 		except AttributeError:
 			print("no serial connection")
-
-#TODO clean up code under here	
+	
 
 	# function to send e-stop command to arduino
 	def eStopPressed(self, man):
+		# if in the manual control mode, update text in set buttons
 		if man:
 			print("Manual Emergency Stop Button pressed, shutting down all systems")
 			self.rpmSetText.set("SET")
 			self.angleSetText.set("SET")
 
 		else:
+			# if in the automatic control mode, pause the timer
 			print("Automatic Emergency Stop Button pressed, shutting down all systems")
 			#pause timer
 			self.timerLength = self.timerLength + (self.startTime - time.time())
 
+		# set variable values and RPM dial value
 		self.rpmVal = 0
 		self.angleVal = 0
+		self.rpmDial.set(self.rpmVal)
 		self.manRunning = False
 		self.autoRunning = False
 
+		# send self.rpmVal and self.angleVal to arduino and Estop command 
 		try:
 			data = str(self.rpmVal) + "," + str(self.angleVal) + ",3"
 			self.ser.write(data.encode())
@@ -694,27 +698,34 @@ class GUIClass:
 	
 	# function to update the timer
 	def updateTimer(self):
+		# exit function if a mixing profile is not currently running
 		if not self.autoRunning:
 			return
 		
+		# if a mixing profile is running, update curTime variable
 		curTime = time.time()
+
+		# if the countdown timer has not reached 0
 		if self.startTime + self.timerLength > curTime:
+			# calculate time remaining
 			tempHrLeft = int(self.timerLength + (self.startTime - curTime)) // 3600
 			tempMinLeft = (int(self.timerLength + (self.startTime - curTime)) // 60) % 60
 			tempSecLeft = int(self.timerLength + (self.startTime - curTime)) % 60
 
+			# update time remaining text
 			self.curProfTimeLeftText.set(f"{tempHrLeft:02}:{tempMinLeft:02}:{tempSecLeft:02}")
 			return
 		
-		# Timer is done:
+		# if the last profile countdown timer has reached 0
 		if self.curProfIndex == self.numProfs - 1:
+			# set time reminaing text to 0, stop mixing, and send profile set complete message
 			self.curProfTimeLeftText.set("00:00:00")
 			self.stopPressed(False)
 			messagebox.showinfo(title= "Profile Set Complete", 
 		       					message= "All profiles have been completed")
 			return
 
-
+		# if time left is 0 and there are more profiles in the queue, move to the next profile
 		if self.curProfIndex < self.numProfs - 1:
 			self.nextProf()
 			return
@@ -724,65 +735,75 @@ class GUIClass:
 
 	# function to increment value displayed in rpm entry box
 	def incRpmEntry(self):
+		# if the entry is at 200, keep entry at 200
 		if (int(self.rpmEntryText.get()) + 10) > 200:
 			self.rpmEntryText.set('200')
-			
+		
+		# else add 10 
 		else:
 			self.rpmEntryText.set(str(int(self.rpmEntry.get()) + 10))
 
 
 	# function to decrement value displayed in rpm entry box
 	def decRpmEntry(self):
+		# if the entry is at 0, keep entry at 0
 		if (int(self.rpmEntryText.get()) - 10) < 0:
 			self.rpmEntryText.set('0')
 		
+		# else subtract 10
 		else:
 			self.rpmEntryText.set(str(int(self.rpmEntry.get()) - 10))
 
 
 	# function to increment value displayed in rpm entry box
 	def incAngleEntry(self):
+		# if the entry is at 90, keep entry at 90
 		if (int(self.angleEntryText.get()) + 15) > 90:
 			self.angleEntryText.set('90')
 		
+		# else add 15
 		else:
 			self.angleEntryText.set(str(int(self.angleEntry.get()) + 15))
 
 
 	# function to decrement value displayed in rpm entry box
 	def decAngleEntry(self):
+		# if the entry is at 15, keep entry at 15
 		if (int(self.angleEntryText.get()) - 15) < 15:
 			self.angleEntryText.set('15')
 		
+		# else subtract 15
 		else:
 			self.angleEntryText.set(str(int(self.angleEntry.get()) - 15))
 
 
 	# function to update selected rpm value
 	def setRpm(self):
-		#try block to validate entry value
+		# try block to validate entry value
 		try:
 			setInt = int(self.rpmEntry.get())
 
+			# range check
 			if (setInt > 200) or (setInt < 0):
 				messagebox.showwarning(title= "RPM out of range", message= "RPM must be between 0 and 200")
 				self.rpmEntryText.set('0')
 				self.rpmVal = 0
 
+			# increment check
 			elif setInt % 10 != 0:
 				messagebox.showwarning(title= "RPM increment error", message= "RPM must be in increments of 10")
 				self.rpmEntryText.set('0')
 				self.rpmVal = 0
 
+			# if checks pass, set rpm value
 			else:
 				self.rpmVal = setInt
 				print("rpm set button clicked, entry rpm is " + str(setInt)
 							+ " rpmVal is " + str(self.rpmVal))
-					
-				
-				
+
+				# if manual mode is running, set dial value and send start command
 				if(self.manRunning):
-					self.rpmDial.set(setInt) #for testing
+					self.rpmDial.set(setInt)
 					try:
 						data = str(self.rpmVal) + "," + str(self.angleVal) + ",1"
 						self.ser.write(data.encode())
@@ -790,7 +811,7 @@ class GUIClass:
 					except AttributeError:
 						print("no serial connection")
 		
-		#if a decimal or non integer value is entered
+		#if a decimal or non integer value is entered, throw error
 		except ValueError:
 			messagebox.showwarning(title= "Non-whole number RPM", message= "RPM must be a whole number")
 			self.rpmEntryText.set('0')
@@ -799,27 +820,29 @@ class GUIClass:
 
 	# function to update selected angle value
 	def setAngle(self):
-		#try block to validate entry value
+		# try block to validate entry value
 		try:
 			setInt = int(self.angleEntry.get())
 
+			# range check
 			if (setInt > 90) or (setInt < 15):
 				messagebox.showwarning(title= "Angle out of range", message= "Angle must be between 15 and 90")
 				self.angleEntryText.set('15')
 				self.angleVal = 15
 			
+			# increment check
 			elif setInt % 15 != 0:
 				messagebox.showwarning(title= "Angle increment error", message= "Angle must be in increments of 15")
 				self.angleEntryText.set('15')
 				self.angleVal = 15
 
+			# if checks pass, set angle value
 			else:
 				self.angleVal = setInt
 				print("angle set button clicked, entry angle is " + str(setInt)
 						+ " self.angleVal is " + str(self.angleVal))
 
-				#self.angleDial.set(setInt) #for testing
-
+				# if manual mode is running, send start command
 				if(self.manRunning):
 					try:
 						data = str(self.rpmVal) + "," + str(self.angleVal) + ",1"
@@ -828,7 +851,7 @@ class GUIClass:
 					except AttributeError:
 						print("no serial connection")
 		
-		#if a decimal or non integer value is entered
+		#if a decimal or non integer value is entered, throw error
 		except ValueError:
 			messagebox.showwarning(title= "Non-whole number Angle", message= "Angle must be a whole number")
 			self.angleEntryText.set('15')
@@ -872,16 +895,19 @@ class GUIClass:
 				messagebox.showwarning(title= "Invalid Data",
 										message= "Angle over 90")
 
+			#check if Angle under 15
 			elif (profileDF['Angle'] < 15).any():
 				print("Angle under 15")
 				messagebox.showwarning(title= "Invalid Data",
 										message= "Angle under 15")
 
+			#check if Angle increments of 15
 			elif (profileDF['Angle'] % 15 != 0).any():
 				print("Angle must be in increments of 15")
 				messagebox.showwarning(title= "Invalid Data",
 										message= "Angle must be in increments of 15")
 
+			#check if RPM increments of 10
 			elif (profileDF['RPM'] % 10 != 0).any():
 				print("RPM must be in increments of 10")
 				messagebox.showwarning(title= "Invalid Data",
@@ -899,7 +925,6 @@ class GUIClass:
 												profileDF.iat[i,4])
 					self.profileList.append(tempProf)
 					self.allProfListBox.insert(i, self.profileList[i].printInfoTextLine())
-					#print(self.profileList[i].rpm) #for testing
 
 				#set current provile to profile at self.curProfIndex
 				self.curProfile = copy.deepcopy(self.profileList[self.curProfIndex])
@@ -910,12 +935,11 @@ class GUIClass:
 				self.curProfTimeLeftText.set(f"{self.curProfile.hour:02}:{self.curProfile.min:02}:{self.curProfile.sec:02}")
 				self.allProfListBox.selection_set(self.curProfIndex)
 
+		# catch cancel button pressed
 		except FileNotFoundError:
-			#TODO change to warning
 			donothing = True
-		
-		#TODO clear datafile?
 
+#TODO clean up code under here
 
 	# function to clear all profiles from the profile list box
 	def clearAllPressed(self):
