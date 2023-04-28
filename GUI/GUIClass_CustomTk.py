@@ -3,6 +3,7 @@ Title: GUIClass_CustomTK.py
 Author: Jonathan Wulf
 Description: This file contains the GUIClass definition and code. This class is responsable for setting up a GUI window to provide control of the T-bioreactor.
 """
+#!/usr/bin/env python
 
 # Imports
 from tkinter import*
@@ -939,105 +940,130 @@ class GUIClass:
 		except FileNotFoundError:
 			donothing = True
 
-#TODO clean up code under here
 
 	# function to clear all profiles from the profile list box
 	def clearAllPressed(self):
+		# stop current profile if running
 		self.stopPressed(False)
+
+		# clear listbox and profileList
 		self.profileList.clear()
 		self.allProfListBox.delete(0, END)
 		self.numProfs = 0
+
+		# reset profile text to default
 		self.curProfRPMText.set("0")
 		self.curProfAngleText.set("0")
 		self.curProfTimeText.set("00:00:00")
 		self.curProfTimeLeftText.set("00:00:00")
 	
-
-	#function to select previous profile in listbox
+	
+	# function to select previous profile in listbox
 	def prevProf(self):
+		# check if at the first profile and notify user 
 		if self.curProfIndex == 0:
 			messagebox.showinfo(title= "First Profile", 
 		       					message= "This is the first profile in the set")
 			return
-			
+		
+		# else deep copy previous profile to current profile
 		if self.curProfIndex > 0 and self.numProfs != 0:
 			self.curProfIndex = self.curProfIndex - 1
-			print(self.curProfIndex)
+			# print(self.curProfIndex)
 			self.curProfile = copy.deepcopy(self.profileList[self.curProfIndex])
+
+			# set rpm, angle, and time values
 			self.curProfRPMText.set(self.curProfile.rpm)
 			self.curProfAngleText.set(self.curProfile.angle)
 			self.curProfTimeText.set(f"{self.curProfile.hour:02}:{self.curProfile.min:02}:{self.curProfile.sec:02}")
 			self.curProfTimeLeftText.set(f"{self.curProfile.hour:02}:{self.curProfile.min:02}:{self.curProfile.sec:02}")
 			self.timerLength = self.curProfile.hour * 3600 + self.curProfile.min * 60 + self.curProfile.sec
 			self.startTime = time.time()
+
+			# update listbox selection
 			self.allProfListBox.see(self.curProfIndex)
 			self.allProfListBox.selection_clear(0, END)
 			self.allProfListBox.selection_set(self.curProfIndex)
 
+		# if already running, send run signal to arduino (start the profile)
 		if self.autoRunning:
 			self.startPressed(False)
 
 
-	#function to select next profile in listbox
+	# function to select next profile in listbox
 	def nextProf(self):
+		# check if at the last profile and notify user
 		if self.curProfIndex == self.numProfs - 1:
 			messagebox.showinfo(title= "Last Profile", 
 		       					message= "This is the last profile in the set")
 			return
 
+		# else deep copy next profile to current profile
 		if self.curProfIndex < self.numProfs - 1 and self.numProfs != 0:
 			self.curProfIndex = self.curProfIndex + 1
-			print(self.curProfIndex)
+			#print(self.curProfIndex)
 			self.curProfile = copy.deepcopy(self.profileList[self.curProfIndex])
+
+			# set rpm, angle, and time values
 			self.curProfRPMText.set(self.curProfile.rpm)
 			self.curProfAngleText.set(self.curProfile.angle)
 			self.curProfTimeText.set(f"{self.curProfile.hour:02}:{self.curProfile.min:02}:{self.curProfile.sec:02}")
 			self.curProfTimeLeftText.set(f"{self.curProfile.hour:02}:{self.curProfile.min:02}:{self.curProfile.sec:02}")
 			self.timerLength = self.curProfile.hour * 3600 + self.curProfile.min * 60 + self.curProfile.sec
 			self.startTime = time.time()
+
+			# update listbox selection
 			self.allProfListBox.see(self.curProfIndex)
 			self.allProfListBox.selection_clear(0, END)
 			self.allProfListBox.selection_set(self.curProfIndex)
 
+		# if already running, send run signal to arduino (start the profile)
 		if self.autoRunning:
 			self.startPressed(False)
 		
 
 	# function to restart the current profile
 	def restartProf(self):
+
+		# if profiles have been added, reset the time to the current profiles total time
 		if self.numProfs != 0:
 			self.curProfTimeLeftText.set(f"{self.curProfile.hour:02}:{self.curProfile.min:02}:{self.curProfile.sec:02}")
 			self.startTime = time.time()
-			#maybe need to send some signal to timer thread
 		
+		# if already running, send run signal to arduino (restart the profile)
 		if self.autoRunning:
 			self.startPressed(False)
 
 		# endregion
 
 
+#built in main
 
-#built in main for testing
 #function to continuously receive and parse feedback data from Arduino
 def getFeedback():
 	while True:
 		try:
+			# read and parse data from serial
 			data = mainSer.readline().decode().strip()
 			RPMFeedback, angleFeedback = data.split(',')
 			RPMFeedback = int(RPMFeedback)
 			angleFeedback = int(angleFeedback)
-			print("Received RPM feedbacks:", RPMFeedback, angleFeedback)
+
+			# print reading and set angleDial
+			print("Received Angle feedback:", angleFeedback)
 			#guiObj.rpmDial.set(RPMFeedback)
 			guiObj.angleDial.set(angleFeedback)
+
 		except ValueError:
 			pass
 
-
+# function to update the timer ever 1 second
 def task():
 	guiObj.updateTimer()
 	window.after(1000, task)
 
 
+# function to stop reactor and clear gui window on close
 def windowClose():
 	guiObj.stopPressed(True)
 	window.destroy()
@@ -1052,11 +1078,12 @@ except serial.serialutil.SerialException:
 	mainSer = NONE
 
 
-
+# set up customTk window
 window = customtkinter.CTk()
 customtkinter.set_appearance_mode("light")
 window.protocol("WM_DELETE_WINDOW", windowClose)
 
+# declare GUIClass object of size 800x400 px
 guiObj = GUIClass(window, mainSer)
 window.geometry("800x400")
 window.after(1000, task)
@@ -1066,56 +1093,5 @@ if not LocalTest:
 	receive_thread = threading.Thread(target=getFeedback)
 	receive_thread.start()
 
-
-
 #start main loop of window (open GUI)
 window.mainloop()
-
-# region OLD CODE
-"""
-# Working main
-
-window = customtkinter.CTk()
-customtkinter.set_appearance_mode("light")
-guiObj = GUIClass(window)
-window.geometry("800x400")
-
-def task():
-	guiObj.updateTimer()
-	window.after(1000, task)
-
-window.after(1000, task)
-window.mainloop()
-
-def runGUI():
-	
-	#add popup to calibrate actuator
-
-
-
-def runFeedback():
-	while True:
-		if guiObj.ser.in_waiting > 0:
-			received_data = guiObj.ser.readline().decode().strip()
-			print("received from Arduino: "+ received_data)
-			break
-
-
-GUIThread = threading.Thread(target= runGUI, args=())
-GUIThread.start()
-
-feedbackThread = threading.Thread(target= runFeedback, args=())
-feedbackThread.start()
-
-
-
-while True:
-	if guiObj.ser.in_waiting > 0:
-		received_data = guiObj.ser.readline().decode().strip()
-		print("received from Arduino: "+ received_data)
-		break
-
-
-"""
-# endregion
-
